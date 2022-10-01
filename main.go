@@ -3,7 +3,7 @@
 package main
 
 import (
-	"fmt"
+	"errors"
 	"log"
 	"os"
 	"os/signal"
@@ -12,42 +12,31 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-var invCommand = discordgo.ApplicationCommand{
-	Name:        "inv",
-	Description: "Manage Inventories",
-	Options: []*discordgo.ApplicationCommandOption{
-		{
-			Type:        discordgo.ApplicationCommandOptionString,
-			Name:        "owner",
-			Description: "Owner of the inventory",
-			Required:    false,
-		},
-		{
-			Type:        discordgo.ApplicationCommandOptionString,
-			Name:        "add",
-			Description: "Add an item to an inventory",
-			Required:    false,
-		},
-		{
-			Type:        discordgo.ApplicationCommandOptionString,
-			Name:        "remove",
-			Description: "Remove an item from an inventory",
-			Required:    false,
-		},
-		{
-			Type:        discordgo.ApplicationCommandOptionString,
-			Name:        "buy",
-			Description: "Owner buys an item from channel's invenory",
-			Required:    false,
-		},
-	},
-}
-
 func main() {
 	// Load bot token.
 	token := os.Getenv("BACKPACK_TOKEN")
 	if token == "" {
 		log.Fatalf("token is missing, you must set BACKPACK_TOKEN")
+	}
+
+	dir := os.Getenv("BACKPACK_DATA")
+	if dir == "" {
+		log.Fatalf("you must set BACKPACK_DATA")
+	}
+	info, err := os.Stat(dir)
+	if errors.Is(err, os.ErrNotExist) {
+		// Create the data directory.
+		if err := os.MkdirAll(dir, 0777); err != nil {
+			log.Fatalf("failed creating data directory: %v: %v\n", dir, err)
+		}
+	} else if !info.IsDir() {
+		log.Fatalln("data path is a file instead of a directory")
+	} else if err != nil {
+		log.Fatalf("error reading data directory: %v: %v\n", dir, err)
+	}
+
+	b := backpack{
+		dir: dir,
 	}
 
 	// Create a new Discord session using the provided bot token.
@@ -57,7 +46,7 @@ func main() {
 	}
 
 	// Register the commandHandler func for InteractionCreate events.
-	dg.AddHandler(commandHandler)
+	dg.AddHandler(b.commandHandler)
 
 	// Recieve messages.
 	dg.Identify.Intents = discordgo.IntentsGuildMessages
@@ -88,79 +77,4 @@ func main() {
 
 	// Cleanly close down the Discord session.
 	dg.Close()
-}
-
-// commandHandler is called (due to the AddHandler above) every time a new
-// command is sent on any channel that the authenticated bot has access to.
-func commandHandler(s *discordgo.Session, m *discordgo.InteractionCreate) {
-	if m.ApplicationCommandData().Name != invCommand.Name {
-		return
-	}
-
-	// DEBUG
-	log.Println("CHANNEL ID:", m.ChannelID)
-
-	// Add the options to a map.
-	opts := m.ApplicationCommandData().Options
-	optMap := make(
-		map[string]*discordgo.ApplicationCommandInteractionDataOption,
-		len(opts),
-	)
-	for _, opt := range opts {
-		optMap[opt.Name] = opt
-	}
-
-	// Figure out the owner of the inventory.
-	var owner string
-	if opt, ok := optMap["owner"]; ok {
-		owner = opt.StringValue()
-		// TODO: Is owner initialized?
-	} else {
-		// Surround string with <# > to make it highlight as a channel on
-		// discord.
-		owner = fmt.Sprintf("<#%v>", m.ChannelID)
-	}
-
-	// Handle options.
-	shouldPrint := true
-	var response string
-	if opt, ok := optMap["add"]; ok {
-		shouldPrint = false
-		response += addItem(owner, opt.StringValue())
-	}
-
-	if opt, ok := optMap["remove"]; ok {
-		shouldPrint = false
-		response += removeItem(owner, opt.StringValue())
-	}
-
-	if shouldPrint {
-		response += printInventory(owner)
-	}
-
-	// Send our response.
-	s.InteractionRespond(m.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Content: response,
-		},
-	})
-}
-
-func addItem(owner, item string) string {
-	s := fmt.Sprintf("added %v to %v\n", item, owner)
-	log.Println(s)
-	return s
-}
-
-func removeItem(owner, item string) string {
-	s := fmt.Sprintf("removed %v from %v\n", item, owner)
-	log.Println(s)
-	return s
-}
-
-func printInventory(owner string) string {
-	s := fmt.Sprintf("printing %v's inventory\n", owner)
-	log.Println(s)
-	return s
 }
