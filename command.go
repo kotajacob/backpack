@@ -90,28 +90,19 @@ func (b backpack) commandHandler(s *discordgo.Session, m *discordgo.InteractionC
 	var owner string
 	if opt, ok := optMap["owner"]; ok {
 		owner = opt.StringValue()
-		// TODO: Is owner initialized?
 	} else {
-		// Surround string with <# > to make it highlight as a channel on
-		// discord.
+		// Surround string with <# > to highlight it as a channel on discord.
 		owner = fmt.Sprintf("<#%v>", m.ChannelID)
 	}
 
-	// Handle options.
-	shouldPrint := true // TODO: Perhaps we should just always print?
+	// Handle add and remove.
 	var response string
 	if opt, ok := optMap["add"]; ok {
-		shouldPrint = false
-		response += b.updateItem(opAdd, owner, opt.StringValue())
+		response += b.modifyItem(opt.StringValue(), owner, opAdd)
 	}
 
 	if opt, ok := optMap["remove"]; ok {
-		shouldPrint = false
-		response += b.updateItem(opDel, owner, opt.StringValue())
-	}
-
-	if shouldPrint {
-		response += b.printInventory(owner)
+		response += b.modifyItem(opt.StringValue(), owner, opDel)
 	}
 
 	// Send our response.
@@ -123,8 +114,9 @@ func (b backpack) commandHandler(s *discordgo.Session, m *discordgo.InteractionC
 	})
 }
 
-func (b backpack) updateItem(op operation, owner, v string) string {
-	values := strings.Split(v, " ")
+// modifyItem updates an item for a given owner based on a request.
+func (b backpack) modifyItem(request, owner string, op operation) string {
+	values := strings.Split(request, " ")
 
 	// If we need to set instead of add to the record count.
 	var absolute bool
@@ -172,10 +164,4 @@ func (b backpack) updateItem(op operation, owner, v string) string {
 		return fmt.Sprintf("%v %v to %v failed", op, record, owner)
 	}
 	return fmt.Sprintf("%v %v to %v succeeded", op, record, owner)
-}
-
-func (b backpack) printInventory(owner string) string {
-	s := fmt.Sprintf("printing %v's inventory\n", owner)
-	log.Println(s)
-	return s
 }

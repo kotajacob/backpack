@@ -9,10 +9,10 @@ import (
 	"testing"
 )
 
-func TestUpdateItem(t *testing.T) {
+func TestModifyItem(t *testing.T) {
 	type test struct {
-		op operation
-		v  string
+		op      operation
+		request string
 
 		begin string
 		want  string
@@ -20,58 +20,58 @@ func TestUpdateItem(t *testing.T) {
 
 	tests := []test{
 		{
-			op:    opAdd,
-			v:     "apples",
-			begin: "",
-			want:  "1,apples,-1",
+			op:      opAdd,
+			request: "apples",
+			begin:   "",
+			want:    "1,apples,-1",
 		},
 		{
-			op:    opAdd,
-			v:     "100",
-			begin: "",
-			want:  "100,coins,-1",
+			op:      opAdd,
+			request: "100",
+			begin:   "",
+			want:    "100,coins,-1",
 		},
 		{
-			op:    opAdd,
-			v:     "10 apples",
-			begin: "",
-			want:  "10,apples,-1",
+			op:      opAdd,
+			request: "10 apples",
+			begin:   "",
+			want:    "10,apples,-1",
 		},
 		{
-			op:    opDel,
-			v:     "apples",
-			begin: "",
-			want:  "0,apples,-1",
+			op:      opDel,
+			request: "apples",
+			begin:   "",
+			want:    "0,apples,-1",
 		},
 		{
-			op:    opDel,
-			v:     "1 apples",
-			begin: "10,apples,-1",
-			want:  "9,apples,-1",
+			op:      opDel,
+			request: "1 apples",
+			begin:   "10,apples,-1",
+			want:    "9,apples,-1",
 		},
 		{
-			op:    opDel,
-			v:     "8 apples",
-			begin: "10,apples,-1",
-			want:  "2,apples,-1",
+			op:      opDel,
+			request: "8 apples",
+			begin:   "10,apples,-1",
+			want:    "2,apples,-1",
 		},
 		{
-			op:    opAdd,
-			v:     "apples",
-			begin: "1,apples,-1",
-			want:  "2,apples,-1",
+			op:      opAdd,
+			request: "apples",
+			begin:   "1,apples,-1",
+			want:    "2,apples,-1",
 		},
 		{
-			op:    opAdd,
-			v:     "10 apples",
-			begin: "1,apples,-1",
-			want:  "11,apples,-1",
+			op:      opAdd,
+			request: "10 apples",
+			begin:   "1,apples,-1",
+			want:    "11,apples,-1",
 		},
 		{
-			op:    opAdd,
-			v:     "apples",
-			begin: "1,pears,-1",
-			want:  "1,pears,-1\n1,apples,-1",
+			op:      opAdd,
+			request: "apples",
+			begin:   "1,pears,-1",
+			want:    "1,pears,-1\n1,apples,-1",
 		},
 	}
 
@@ -89,7 +89,7 @@ func TestUpdateItem(t *testing.T) {
 		b := backpack{
 			dir: dir,
 		}
-		b.updateItem(tc.op, "owner", tc.v)
+		b.modifyItem(tc.request, "owner", tc.op)
 
 		data, err := os.ReadFile(path)
 		if err != nil {
