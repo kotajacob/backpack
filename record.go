@@ -4,10 +4,19 @@ import (
 	"bytes"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/dustin/go-humanize"
 	"github.com/gertd/go-pluralize"
 )
+
+type declinedError struct {
+	r record
+}
+
+func (e *declinedError) Error() string {
+	return fmt.Sprintf("transaction \"%v\" declined", e.r)
+}
 
 // record represents a single entry in an inventory.
 type record struct {
@@ -17,6 +26,7 @@ type record struct {
 }
 
 // addCount adds to a record's count.
+// If the count would be made negative, a declinedError is returned.
 func (r *record) addCount(count string) error {
 	current, err := strconv.Atoi(r.count)
 	if err != nil {
@@ -35,6 +45,9 @@ func (r *record) addCount(count string) error {
 		)
 	}
 	sum := current + addend
+	if sum < 0 {
+		return &declinedError{*r}
+	}
 	r.count = strconv.Itoa(sum)
 	return nil
 }
@@ -46,7 +59,7 @@ func (r record) String() string {
 	// Ignoring error to use 0 as fallback count.
 	count, _ := strconv.Atoi(r.count)
 	plur := pluralize.NewClient()
-	buf.WriteString(plur.Pluralize(r.name, count, true))
+	buf.WriteString(strings.TrimSpace(plur.Pluralize(r.name, count, true)))
 
 	price, err := strconv.Atoi(r.price)
 	if r.price != NULL_PRICE && err == nil {

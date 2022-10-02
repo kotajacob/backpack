@@ -10,17 +10,22 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strconv"
 )
 
 // updateRecord updates a record with v in a csv file located at dir/owner.csv.
 //
 // absolute indicates that we should set the count instead of adding to the
 // existing count.
-func updateRecord(v record, dir, owner string, absolute bool) error {
+//
+// The updated record and the old record, or an error are returned.
+func updateRecord(v record, dir, owner string, absolute bool) (record, record, error) {
+	var updated record
+	var old record
 	path := filepath.Join(dir, owner+".csv")
 	recs, err := loadRecords(path)
 	if err != nil {
-		return err
+		return updated, old, err
 	}
 
 	var found bool
@@ -29,23 +34,33 @@ func updateRecord(v record, dir, owner string, absolute bool) error {
 			continue
 		}
 		found = true
+		old = recs[i]
 
 		if absolute {
 			recs[i].count = v.count
 		} else {
-			recs[i].addCount(v.count)
+			if err := recs[i].addCount(v.count); err != nil {
+				return updated, old, err
+			}
 		}
 
 		// Use the new price only if we were given a price.
 		if v.price != NULL_PRICE {
 			recs[i].price = v.price
 		}
+		updated = recs[i]
 	}
 	if !found {
+		count, err := strconv.Atoi(v.count)
+		if err != nil || count < 0 {
+			return updated, old, err
+		}
+
+		updated = v
 		recs = append(recs, v)
 	}
 
-	return storeRecords(path, recs)
+	return updated, old, storeRecords(path, recs)
 }
 
 // loadRecords reads a csv file located at path and parses the contents into a
