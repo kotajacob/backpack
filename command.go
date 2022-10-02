@@ -25,6 +25,19 @@ const (
 	opBuy
 )
 
+func (op operation) String() string {
+	switch op {
+	case opAdd:
+		return "add"
+	case opDel:
+		return "remove"
+	case opBuy:
+		return "buy"
+	default:
+		return "unknown operation"
+	}
+}
+
 var invCommand = discordgo.ApplicationCommand{
 	Name:        "inv",
 	Description: "Manage Inventories",
@@ -85,7 +98,7 @@ func (b backpack) commandHandler(s *discordgo.Session, m *discordgo.InteractionC
 	}
 
 	// Handle options.
-	shouldPrint := true
+	shouldPrint := true // TODO: Perhaps we should just always print?
 	var response string
 	if opt, ok := optMap["add"]; ok {
 		shouldPrint = false
@@ -149,12 +162,16 @@ func (b backpack) updateItem(op operation, owner, v string) string {
 		values = values[:len(values)-1]
 	}
 
-	record := []string{
-		strconv.Itoa(count),
-		strings.Join(values, " "),
-		price,
+	record := record{
+		count: strconv.Itoa(count),
+		name:  strings.Join(values, " "),
+		price: price,
 	}
-	return updateRecord(record, b.dir, owner, absolute)
+	if err := updateRecord(record, b.dir, owner, absolute); err != nil {
+		log.Println(err)
+		return fmt.Sprintf("%v %v to %v failed", op, record, owner)
+	}
+	return fmt.Sprintf("%v %v to %v succeeded", op, record, owner)
 }
 
 func (b backpack) printInventory(owner string) string {

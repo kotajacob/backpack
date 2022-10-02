@@ -8,92 +8,121 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 )
 
-// updateRecord updates a csv file in dir named owner.csv.
-// A record always has 3 fields: count, name, price.
+// record represents a single entry in an inventory.
+type record struct {
+	count string
+	name  string
+	price string
+}
+
+// addCount adds to a record's count.
+func (r *record) addCount(count string) error {
+	current, err := strconv.Atoi(r.count)
+	if err != nil {
+		return fmt.Errorf(
+			"failed parsing count of %v: %v\n",
+			r,
+			err,
+		)
+	}
+	addend, err := strconv.Atoi(count)
+	if err != nil {
+		return fmt.Errorf(
+			"failed parsing count %v: %v\n",
+			count,
+			err,
+		)
+	}
+	sum := current + addend
+	r.count = strconv.Itoa(sum)
+	return nil
+}
+
+type records []record
+
+// updateRecord updates a record with v in a csv file located at dir/owner.csv.
 //
-// absolute indicates that we should simply set the count instead of adding
-// to the existing count.
-func updateRecord(record []string, dir, owner string, absolute bool) string {
+// absolute indicates that we should set the count instead of adding to the
+// existing count.
+func updateRecord(v record, dir, owner string, absolute bool) error {
 	path := filepath.Join(dir, owner+".csv")
-	data, err := os.ReadFile(path)
-	if err != nil && !errors.Is(err, os.ErrNotExist) {
-		log.Printf("failed reading from %v: %v\n", path, err)
-		return fmt.Sprintf("failed to add %v to %v", record, owner)
+	recs, err := loadRecords(path)
+	if err != nil {
+		return err
 	}
 
-	r := csv.NewReader(bytes.NewReader(data))
+	var found bool
+	for i := range recs {
+		if recs[i].name != v.name {
+			continue
+		}
+		found = true
 
-	// We're going to build up a new list of all the records to store. So we add
-	// all the existing records whos names do not match the record we were
-	// given. Then we either add our modified record.
-	var records [][]string
+		if absolute {
+			recs[i].count = v.count
+		} else {
+			recs[i].addCount(v.count)
+		}
+
+		// Use the new price only if we were given a price.
+		if v.price != NULL_PRICE {
+			recs[i].price = v.price
+		}
+	}
+	if !found {
+		recs = append(recs, v)
+	}
+
+	return storeRecords(path, recs)
+}
+
+// loadRecords reads a csv file located at path and parses the contents into a
+// list of records.
+func loadRecords(path string) (records, error) {
+	var recs records
+
+	d, err := os.ReadFile(path)
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return recs, fmt.Errorf("failed reading %v: %v\n", path, err)
+	}
+	r := csv.NewReader(bytes.NewReader(d))
+
 	for {
-		oldRecord, err := r.Read()
+		line, err := r.Read()
 		if err == io.EOF {
-			// Add the record.
-			records = append(records, record)
 			break
 		}
 		if err != nil {
-			log.Printf("failed parsing from %v: %v\n", path, err)
-			return fmt.Sprintf("failed to add %v to %v", record, owner)
+			return recs, fmt.Errorf("failed parsing %v: %v\n", path, err)
 		}
+		rec := record{
+			count: line[0],
+			name:  line[1],
+			price: line[2],
+		}
+		recs = append(recs, rec)
+	}
 
-		if oldRecord[1] != record[1] {
-			// Not current record.
-			records = append(records, oldRecord)
-			continue
-		}
+	return recs, nil
+}
 
-		if !absolute {
-			// Add the count.
-			count, err := strconv.Atoi(record[0])
-			if err != nil {
-				log.Printf("failed parsing count from %v: %v\n", path, err)
-				return fmt.Sprintf("failed to add %v to %v", record, owner)
-			}
-			oldCount, err := strconv.Atoi(oldRecord[0])
-			if err != nil {
-				log.Printf("failed parsing count from %v: %v\n", path, err)
-				return fmt.Sprintf("failed to add %v to %v", record, owner)
-			}
-			count += oldCount
-			record[0] = strconv.Itoa(count)
-		}
-
-		// Use the old price if we were given NULL_PRICE.
-		if record[2] == NULL_PRICE {
-			record[2] = oldRecord[2]
-		}
+// storeRecords writes a list of records to a csv file at path.
+func storeRecords(path string, records records) error {
+	var lines [][]string
+	for _, r := range records {
+		line := []string{r.count, r.name, r.price}
+		lines = append(lines, line)
 	}
 
 	var buf bytes.Buffer
 	w := csv.NewWriter(&buf)
 
-	w.WriteAll(records)
+	w.WriteAll(lines)
 	w.Flush()
-	err = os.WriteFile(
-		path,
-		buf.Bytes(),
-		0600,
-	)
-	if err != nil {
-		log.Printf("failed writing %v to %v: %v\n", record, path, err)
-		return fmt.Sprintf("failed to add %v to %v", record, owner)
-	}
-
-	s := fmt.Sprintf(
-		"%v now has %v",
-		owner,
-		strings.Join(record[:len(record)-1], " "),
-	)
-	log.Println(s)
-	return s
+	return os.WriteFile(path, buf.Bytes(), 0600)
 }
