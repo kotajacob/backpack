@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/charmbracelet/lipgloss"
 	"github.com/dustin/go-humanize"
 	"github.com/gertd/go-pluralize"
 )
@@ -70,4 +71,101 @@ func (r record) String() string {
 	return buf.String()
 }
 
+// records represents a collection of entries in an inventory.
 type records []record
+
+var recordsTable = lipgloss.NewStyle().
+	BorderStyle(lipgloss.DoubleBorder())
+var recordsColumn = lipgloss.NewStyle().
+	PaddingLeft(1).
+	PaddingRight(1)
+
+// String prints out a pretty table showing the records.
+// It looks like this, but wrapped in 3 backticks for discord:
+//
+//	╔══════════════════════════════════╗
+//	║ Quantity  Item            Price  ║
+//	║──────────────────────────────────║
+//	║ 10        Health Potions  $10    ║
+//	║ 10,000    Mana Potions    $8     ║
+//	║ 1         Death Potion    $5,000 ║
+//	╚══════════════════════════════════╝
+//
+// The price column is omitted if no items contain a price.
+func (rs records) String() string {
+	var buf bytes.Buffer
+
+	buf.WriteString("```\n")
+
+	// Gather column data.
+	var counts []string
+	var names []string
+	var prices []string
+	for _, r := range rs {
+		count, _ := strconv.Atoi(r.count)
+		if count == 0 {
+			// Skip records with 0 count.
+			continue
+		}
+		r.count = humanize.Comma(int64(count))
+		counts = append(counts, r.count)
+
+		plur := pluralize.NewClient()
+		names = append(
+			names,
+			strings.TrimSpace(plur.Pluralize(r.name, count, false)),
+		)
+
+		price, err := strconv.Atoi(r.price)
+		if r.price != NULL_PRICE && err == nil {
+			r.price = "$" + humanize.Comma(int64(price))
+		} else {
+			r.price = ""
+		}
+		prices = append(prices, r.price)
+	}
+
+	// Add headings.
+	counts = append([]string{"Quantity"}, counts...)
+	names = append([]string{"Item"}, names...)
+
+	// Exclude the price column if it is empty (other than the header).
+	var found bool
+	for _, p := range prices {
+		if p != "" {
+			found = true
+		}
+	}
+	if found {
+		prices = append([]string{"Price"}, prices...)
+	} else {
+		prices = []string{}
+	}
+
+	countCol := recordsColumn.Render(
+		lipgloss.JoinVertical(lipgloss.Top, counts...),
+	)
+	nameCol := recordsColumn.Render(
+		lipgloss.JoinVertical(lipgloss.Top, names...),
+	)
+	priceCol := recordsColumn.Render(
+		lipgloss.JoinVertical(lipgloss.Top, prices...),
+	)
+
+	if lipgloss.Height(priceCol) <= 2 {
+		priceCol = ""
+	}
+
+	table := lipgloss.JoinHorizontal(lipgloss.Left, countCol, nameCol, priceCol)
+	// Add a line under the header.
+	line := strings.Repeat("─", lipgloss.Width(table))
+	rows := strings.Split(table, "\n")
+	header := rows[0]
+	body := rows[1:]
+	rows = append([]string{header, line}, body...)
+	table = strings.Join(rows, "\n")
+
+	buf.WriteString(recordsTable.Render(table))
+	buf.WriteString("\n```")
+	return buf.String()
+}

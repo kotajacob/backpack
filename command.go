@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -106,20 +107,30 @@ func (b backpack) commandHandler(s *discordgo.Session, m *discordgo.InteractionC
 		owner = fmt.Sprintf("<#%v>", m.ChannelID)
 	}
 
-	// Handle add and remove.
+	// Handle add, remove, and set.
+	var operated bool
 	var responses []string
 	if opt, ok := optMap["add"]; ok {
+		operated = true
 		msg, _ := b.modifyItem(opt.StringValue(), owner, opAdd)
 		responses = append(responses, msg)
 	}
 
 	if opt, ok := optMap["remove"]; ok {
+		operated = true
 		msg, _ := b.modifyItem(opt.StringValue(), owner, opDel)
 		responses = append(responses, msg)
 	}
 
 	if opt, ok := optMap["set"]; ok {
+		operated = true
 		msg, _ := b.modifyItem(opt.StringValue(), owner, opSet)
+		responses = append(responses, msg)
+	}
+
+	// Print a table as fallback command if there was no operation given.
+	if !operated {
+		msg := b.displayInvetory(owner)
 		responses = append(responses, msg)
 	}
 
@@ -225,7 +236,7 @@ func (b backpack) modifyItem(request, owner string, op operation) (string, bool)
 		// Fatal error.
 		log.Println(err)
 		return fmt.Sprintf(
-			"Backpack update failed! Contant your local currator for help!",
+			"Backpack update failed! Contact your local currator for help!",
 		), true
 	}
 
@@ -233,4 +244,16 @@ func (b backpack) modifyItem(request, owner string, op operation) (string, bool)
 	response.WriteString(fmt.Sprintf("\n%v has %v", owner, updated))
 	log.Println(owner, strings.ToLower(op.String()), absNoPriceRec)
 	return response.String(), declined
+}
+
+func (b backpack) displayInvetory(owner string) string {
+	path := filepath.Join(b.dir, owner+".csv")
+	recs, err := loadRecords(path)
+	if err != nil {
+		return fmt.Sprintf(
+			"Reading %v failed! Contact your local currator for help!",
+			owner,
+		)
+	}
+	return recs.String()
 }
