@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/gertd/go-pluralize"
 )
 
 const NULL_PRICE = "-1"
@@ -28,11 +29,11 @@ const (
 func (op operation) String() string {
 	switch op {
 	case opAdd:
-		return "add"
+		return "added"
 	case opDel:
-		return "remove"
+		return "removed"
 	case opBuy:
-		return "buy"
+		return "bought"
 	default:
 		return "unknown operation"
 	}
@@ -126,7 +127,7 @@ func (b backpack) modifyItem(request, owner string, op operation) string {
 		// First argument is a number.
 		if len(values) == 1 {
 			// A single number means we're adding coins.
-			values = append(values, "coins", NULL_PRICE)
+			values = append(values, "coin", NULL_PRICE)
 		}
 		values = values[1:]
 	} else {
@@ -154,9 +155,13 @@ func (b backpack) modifyItem(request, owner string, op operation) string {
 		values = values[:len(values)-1]
 	}
 
+	// Make the name singular for storage.
+	plur := pluralize.NewClient()
+	name := plur.Singular(strings.Join(values, " "))
+
 	record := record{
 		count: strconv.Itoa(count),
-		name:  strings.Join(values, " "),
+		name:  name,
 		price: price,
 	}
 	if err := updateRecord(record, b.dir, owner, absolute); err != nil {

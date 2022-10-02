@@ -10,40 +10,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strconv"
 )
-
-// record represents a single entry in an inventory.
-type record struct {
-	count string
-	name  string
-	price string
-}
-
-// addCount adds to a record's count.
-func (r *record) addCount(count string) error {
-	current, err := strconv.Atoi(r.count)
-	if err != nil {
-		return fmt.Errorf(
-			"failed parsing count of %v: %v\n",
-			r,
-			err,
-		)
-	}
-	addend, err := strconv.Atoi(count)
-	if err != nil {
-		return fmt.Errorf(
-			"failed parsing count %v: %v\n",
-			count,
-			err,
-		)
-	}
-	sum := current + addend
-	r.count = strconv.Itoa(sum)
-	return nil
-}
-
-type records []record
 
 // updateRecord updates a record with v in a csv file located at dir/owner.csv.
 //

@@ -2,7 +2,11 @@ module git.sr.ht/~kota/backpack
 
 go 1.19
 
-require github.com/bwmarrin/discordgo v0.26.1
+require (
+	github.com/bwmarrin/discordgo v0.26.1
+	github.com/dustin/go-humanize v1.0.0
+	github.com/gertd/go-pluralize v0.2.1
+)
 
 require (
 	github.com/gorilla/websocket v1.4.2 // indirect
