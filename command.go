@@ -15,6 +15,8 @@ import (
 )
 
 const NULL_PRICE = "-1"
+const COIN = "coin"
+const FATAL_MSG = "Backpack update failed! Contact your local currator for help!"
 
 type backpack struct {
 	dir string
@@ -112,25 +114,25 @@ func (b backpack) commandHandler(s *discordgo.Session, m *discordgo.InteractionC
 	var responses []string
 	if opt, ok := optMap["add"]; ok {
 		operated = true
-		msg, _ := b.modifyItem(opt.StringValue(), owner, opAdd)
+		msg := b.modifyItem(opt.StringValue(), owner, opAdd)
 		responses = append(responses, msg)
 	}
 
 	if opt, ok := optMap["remove"]; ok {
 		operated = true
-		msg, _ := b.modifyItem(opt.StringValue(), owner, opDel)
+		msg := b.modifyItem(opt.StringValue(), owner, opDel)
 		responses = append(responses, msg)
 	}
 
 	if opt, ok := optMap["set"]; ok {
 		operated = true
-		msg, _ := b.modifyItem(opt.StringValue(), owner, opSet)
+		msg := b.modifyItem(opt.StringValue(), owner, opSet)
 		responses = append(responses, msg)
 	}
 
 	// Print a table as fallback command if there was no operation given.
 	if !operated {
-		msg := b.displayInvetory(owner)
+		msg := b.displayInvetory(owner, false)
 		responses = append(responses, msg)
 	}
 
@@ -143,14 +145,189 @@ func (b backpack) commandHandler(s *discordgo.Session, m *discordgo.InteractionC
 	})
 }
 
+// displayInvetory prints out a pretty table showing owner's inventory.
+func (b backpack) displayInvetory(owner string, pricedOnly bool) string {
+	path := filepath.Join(b.dir, owner+".csv")
+	recs, err := loadRecords(path)
+	if err != nil {
+		return FATAL_MSG
+	}
+	if pricedOnly {
+		return recs.forSale().String()
+	}
+	return recs.String()
+}
+
+// buyItem removes an item from the seller, removes the corresponding number of
+// coins from the buyer, and then adds the item to the buyer.
+//
+// Unlike add, set, and remove, you do not specify a price in a buy request.
+// Additionally, you must always specify a name as the shorthand add/set/remove
+// coin functionality is not used in buy requests.
+func (b backpack) buyItem(request, buyer, seller string) string {
+	values := strings.Split(request, " ")
+
+	// Check if the request has a count.
+	count, err := strconv.Atoi(values[0])
+	if err == nil {
+		// First argument is a number.
+		if len(values) == 1 {
+			// Normally, a number means we're using coins, but you cannot buy
+			// coins so reject the offer.
+			return "You can't buy coins. Make sure you request an item."
+		}
+		values = values[1:]
+	}
+
+	// Request count should always be greater than 0!
+	if count == 0 {
+		if request == "" {
+			return b.displayInvetory(seller, true)
+		}
+		return "You can't buy 0 of an item silly!"
+	} else if count < 0 {
+		fixed := strconv.Itoa(-count) + " " + strings.Join(values, " ")
+		return fmt.Sprintf("You're requested to give away your items?\n"+
+			"Try again with: \"%v\"", fixed)
+	}
+
+	// Prepare the record requests.
+	plur := pluralize.NewClient()
+	name := plur.Singular(strings.Join(values, " "))
+	itemFromSeller := record{
+		count: strconv.Itoa(-count), // Pass a negative count to seller.
+		name:  name,
+		price: NULL_PRICE,
+	}
+	itemToBuyer := record{
+		count: strconv.Itoa(count), // Pass a positive count to buyer.
+		name:  name,
+		price: NULL_PRICE,
+	}
+
+	var response bytes.Buffer
+
+	// Remove item from seller.
+	sellerUpdated, sellerOld, err := updateRecord(
+		itemFromSeller,
+		b.dir,
+		seller,
+		false,
+	)
+	if _, ok := err.(*declinedError); ok {
+		// Transaction declined. Seller's doesn't have enough in stock.
+		response.WriteString(fmt.Sprintf(
+			"%v does not have %v in stock\n",
+			seller,
+			itemToBuyer,
+		))
+		response.WriteString("Please choose one of the following items:\n")
+		response.WriteString(b.displayInvetory(seller, true))
+		return response.String()
+	} else if err != nil {
+		// Fatal error.
+		log.Println(err)
+		return FATAL_MSG
+	}
+
+	// Ensure that the item is actually for sale!
+	if sellerOld.price == NULL_PRICE {
+		// Transaction declined. Item is not for sale!
+		response.WriteString(
+			fmt.Sprintf("%v does not have %v for sale\n", seller, itemToBuyer),
+		)
+		response.WriteString("Please choose one of the following items:\n")
+		response.WriteString(b.displayInvetory(seller, true))
+
+		// Revert seller inventory change!
+		_, _, err := updateRecord(sellerOld, b.dir, seller, true)
+		if err != nil {
+			log.Printf(
+				"error in buy request %v: "+
+					"item was not for sale, but unrolling transaction failed: %v\n",
+				itemToBuyer,
+				err,
+			)
+			return FATAL_MSG
+		}
+		return response.String()
+	}
+
+	// Remove coins from buyer.
+	count, err = strconv.Atoi(itemToBuyer.count)
+	if err != nil {
+		return FATAL_MSG
+	}
+	price, err := strconv.Atoi(sellerOld.price)
+	if err != nil {
+		return FATAL_MSG
+	}
+	sum := count * price
+	coinsFromBuyer := record{
+		count: strconv.Itoa(-sum), // Negative to subtract.
+		name:  COIN,
+		price: NULL_PRICE,
+	}
+	_, buyerOld, err := updateRecord(coinsFromBuyer, b.dir, buyer, false)
+	if _, ok := err.(*declinedError); ok {
+		// Transaction declined. Buyer doesn't have enough coins.
+		response.WriteString(
+			fmt.Sprintf("%v has insufficient funds\n", buyer) +
+				fmt.Sprintf("%v costs $%v\n", itemToBuyer, strconv.Itoa(sum)) +
+				fmt.Sprintf("%v only has %v", buyer, buyerOld),
+		)
+
+		// Revert seller inventory change!
+		_, _, err := updateRecord(sellerOld, b.dir, seller, true)
+		if err != nil {
+			log.Printf(
+				"error in buy request %v: "+
+					"buyer lacked coins, but unrolling transaction failed: %v\n",
+				itemToBuyer,
+				err,
+			)
+			return FATAL_MSG
+		}
+		return response.String()
+	} else if err != nil {
+		// Fatal error.
+		log.Println(err)
+		return FATAL_MSG
+	}
+
+	// Give item to buyer.
+	_, _, err = updateRecord(itemToBuyer, b.dir, buyer, false)
+	if err != nil {
+		log.Printf("error in buy request %v: "+
+			"item removed from seller, coins removed from buyer,"+
+			"but failed to give %v to buyer", request, itemToBuyer)
+		return FATAL_MSG
+	}
+	response.WriteString(fmt.Sprintf(
+		"%v bought %v for $%v\n",
+		buyer,
+		itemToBuyer,
+		strings.TrimPrefix(coinsFromBuyer.count, "-"),
+	))
+	response.WriteString(fmt.Sprintf(
+		"%v has %v\n",
+		buyer,
+		itemToBuyer,
+	))
+	response.WriteString(fmt.Sprintf(
+		"%v has %v left in stock",
+		seller,
+		sellerUpdated,
+	))
+	return response.String()
+}
+
 // modifyItem updates an item for a given owner based on a request.
+// An appropriate message for the user will be returned.
 //
-// An appropriate message for the user along with a boolean indicating if the
-// transaction was declined will be returned.
-//
-// Take note that the transaction could also fail due to database corruption or
-// other such issues.
-func (b backpack) modifyItem(request, owner string, op operation) (string, bool) {
+// Take note that the transaction can fail due to database corruption or other
+// such issues.
+func (b backpack) modifyItem(request, owner string, op operation) string {
 	values := strings.Split(request, " ")
 
 	// If we need to set instead of add to the record count.
@@ -162,7 +339,7 @@ func (b backpack) modifyItem(request, owner string, op operation) (string, bool)
 		// First argument is a number.
 		if len(values) == 1 {
 			// A single number means we're adding coins.
-			values = append(values, "coin", NULL_PRICE)
+			values = append(values, COIN, NULL_PRICE)
 		}
 		values = values[1:]
 	} else {
@@ -203,7 +380,6 @@ func (b backpack) modifyItem(request, owner string, op operation) (string, bool)
 	}
 
 	var response bytes.Buffer
-	var declined bool
 	absNoPriceRec := record{
 		count: strings.TrimPrefix(rec.count, "-"),
 		name:  rec.name,
@@ -211,7 +387,6 @@ func (b backpack) modifyItem(request, owner string, op operation) (string, bool)
 	updated, old, err := updateRecord(rec, b.dir, owner, absolute)
 	if _, ok := err.(*declinedError); ok {
 		// Declined.
-		declined = true
 		response.WriteString(fmt.Sprintf(
 			"%v does not have %v to remove",
 			owner,
@@ -235,25 +410,11 @@ func (b backpack) modifyItem(request, owner string, op operation) (string, bool)
 	} else {
 		// Fatal error.
 		log.Println(err)
-		return fmt.Sprintf(
-			"Backpack update failed! Contact your local currator for help!",
-		), true
+		return FATAL_MSG
 	}
 
 	// Add a little summary line.
 	response.WriteString(fmt.Sprintf("\n%v has %v", owner, updated))
 	log.Println(owner, strings.ToLower(op.String()), absNoPriceRec)
-	return response.String(), declined
-}
-
-func (b backpack) displayInvetory(owner string) string {
-	path := filepath.Join(b.dir, owner+".csv")
-	recs, err := loadRecords(path)
-	if err != nil {
-		return fmt.Sprintf(
-			"Reading %v failed! Contact your local currator for help!",
-			owner,
-		)
-	}
-	return recs.String()
+	return response.String()
 }

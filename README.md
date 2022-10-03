@@ -11,13 +11,25 @@ export BACKPACK_DATA=/home/backpack/data
 ```
 
 # usage
-There are two different operations: `add` and `remove` which take a string
-indicating an item to add with an optional count and price.
+There are four different operations: `buy`, `add`, `remove`, and `set` which
+take a string indicating an item with an optional count and price. If the count
+is given it comes first and if the price is given it comes last.
+
+# buy
+If no count is given it will be 1. Buy does not accept a price option in the
+request. The `owner` option must always be used with `buy`. The owner is the
+buyer and the seller is the room from which the command is called. If the seller
+has enough in stock and the buyer has enough coins both are removed and the item
+is given to the buyer.
+```
+/inv owner[#finn] buy[10 apples]
+/inv owner[#gordon] buy[10 regular arrows]
+/inv owner[#aurora] buy[mighty sword]
+```
 
 ## add
-The count is specified first. If it is missing the count will be 1. The price is
-specified last and if it is missing the price will simply not be changed. The
-default price is simply "not for sale".
+If no count is given it will be 1. If no price is given the price will simply
+not be changed. The default price is "not for sale".
 ```
 /inv add[bow]
 /inv add[2 apple]
@@ -25,12 +37,19 @@ default price is simply "not for sale".
 ```
 
 ## remove
-The count is specified first. If it is missing ALL of that item will be removed.
-The price works just like in add.
+If no count is given ALL of that item will be removed. The price works just like
+in add.
 ```
 /inv remove[bow]
 /inv remove[2 apple]
 /inv remove[4 apple 10]
+```
+
+# set
+Set is the simplest of the operations. It will just change the given inventory
+to match the given number and value of items.
+```
+/inv set[25 regular arrows 2]
 ```
 
 ## owner

@@ -168,3 +168,15 @@ func (rs records) String() string {
 	buf.WriteString("\n```")
 	return buf.String()
 }
+
+// forSale returns records which have a price.
+func (rs records) forSale() records {
+	var recs records
+	for _, r := range rs {
+		if r.price == NULL_PRICE {
+			continue
+		}
+		recs = append(recs, r)
+	}
+	return recs
+}
