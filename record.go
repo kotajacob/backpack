@@ -94,7 +94,6 @@ var recordsColumn = lipgloss.NewStyle().
 // The price column is omitted if no items contain a price.
 func (rs records) String() string {
 	var buf bytes.Buffer
-
 	buf.WriteString("```\n")
 
 	// Gather column data.
@@ -152,7 +151,7 @@ func (rs records) String() string {
 		lipgloss.JoinVertical(lipgloss.Top, prices...),
 	)
 
-	if lipgloss.Height(priceCol) <= 2 {
+	if lipgloss.Height(priceCol) <= 1 {
 		priceCol = ""
 	}
 
