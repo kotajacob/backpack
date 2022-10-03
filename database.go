@@ -52,8 +52,11 @@ func updateRecord(v record, dir, owner string, absolute bool) (record, record, e
 	}
 	if !found {
 		count, err := strconv.Atoi(v.count)
-		if err != nil || count < 0 {
+		if err != nil {
 			return updated, old, err
+		}
+		if count < 0 {
+			return updated, old, &declinedError{v}
 		}
 
 		updated = v
