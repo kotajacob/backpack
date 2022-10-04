@@ -163,6 +163,7 @@ func (b backpack) displayInvetory(owner string, pricedOnly bool) string {
 // Additionally, you must always specify a name as the shorthand add/set/remove
 // coin functionality is not used in buy requests.
 func (b backpack) buyItem(request, buyer, seller string) string {
+	log.Println(buyer, "bought", request, "from", seller)
 	values := strings.Split(request, " ")
 
 	// Check if the request has a count.
@@ -322,6 +323,7 @@ func (b backpack) buyItem(request, buyer, seller string) string {
 // Take note that the transaction can fail due to database corruption or other
 // such issues.
 func (b backpack) modifyItem(request, owner string, op operation) string {
+	log.Println(owner, strings.ToLower(op.String()), request)
 	values := strings.Split(request, " ")
 
 	// If we need to set instead of add to the record count.
@@ -414,6 +416,5 @@ func (b backpack) modifyItem(request, owner string, op operation) string {
 
 	// Add a little summary line.
 	response.WriteString(fmt.Sprintf("\n%v has %v", owner, updated))
-	log.Println(owner, strings.ToLower(op.String()), absNoPriceRec)
 	return response.String()
 }
