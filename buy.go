@@ -123,6 +123,11 @@ func (b backpack) buyItem(request, buyer, seller string) string {
 		name:  COIN,
 		price: NOT_FOR_SALE,
 	}
+	coinsToSeller := record{
+		count: sum,
+		name:  COIN,
+		price: NOT_FOR_SALE,
+	}
 	_, buyerOld, err := updateRecord(coinsFromBuyer, b.dir, buyer, false)
 	if _, ok := err.(*declinedError); ok {
 		// Transaction declined. Buyer doesn't have enough coins.
@@ -150,6 +155,15 @@ func (b backpack) buyItem(request, buyer, seller string) string {
 		return FATAL_MSG
 	}
 
+	// Give coins to seller.
+	_, _, err = updateRecord(coinsToSeller, b.dir, seller, false)
+	if err != nil {
+		log.Printf("error in buy request %v: "+
+			"item removed from seller, coins removed from buyer,"+
+			"but failed to give coins to seller", request)
+		return FATAL_MSG
+	}
+
 	// Give item to buyer.
 	_, _, err = updateRecord(itemToBuyer, b.dir, buyer, false)
 	if err != nil {
@@ -158,15 +172,12 @@ func (b backpack) buyItem(request, buyer, seller string) string {
 			"but failed to give %v to buyer", request, itemToBuyer)
 		return FATAL_MSG
 	}
-	absCoins := coinsFromBuyer.count
-	if absCoins < 0 {
-		absCoins = -absCoins
-	}
+
 	response.WriteString(fmt.Sprintf(
 		"%v bought %v for $%v\n",
 		buyer,
 		itemToBuyer,
-		absCoins,
+		sum,
 	))
 	response.WriteString(fmt.Sprintf(
 		"%v has %v\n",
