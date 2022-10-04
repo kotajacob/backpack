@@ -182,10 +182,10 @@ func (b backpack) buyItem(request, buyer, seller string) string {
 		if request == "" {
 			return b.displayInvetory(seller, true)
 		}
-		return "You can't buy 0 of an item silly!"
+		return "You can't buy 0 of an item, silly!"
 	} else if count < 0 {
 		fixed := strconv.Itoa(-count) + " " + strings.Join(values, " ")
-		return fmt.Sprintf("You're requested to give away your items?\n"+
+		return fmt.Sprintf("You've requested to give away your items?\n"+
 			"Try again with: \"%v\"", fixed)
 	}
 
