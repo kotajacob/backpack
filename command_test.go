@@ -132,7 +132,7 @@ func TestBuyItem(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		dir := os.TempDir()
+		dir := t.TempDir()
 
 		// Write the buyer's inventory.
 		buyerPath := filepath.Join(dir, "buyer.csv")
