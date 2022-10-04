@@ -51,11 +51,7 @@ func updateRecord(v record, dir, owner string, absolute bool) (record, record, e
 		updated = recs[i]
 	}
 	if !found {
-		count, err := strconv.Atoi(v.count)
-		if err != nil {
-			return updated, old, err
-		}
-		if count < 0 {
+		if v.count < 0 {
 			return updated, old, &declinedError{v}
 		}
 
@@ -85,10 +81,24 @@ func loadRecords(path string) (records, error) {
 		if err != nil {
 			return recs, fmt.Errorf("failed parsing %v: %v\n", path, err)
 		}
+		count, err := strconv.Atoi(line[0])
+		if err != nil {
+			return recs, fmt.Errorf(
+				"failed parsing count as int: %v\n",
+				line[0],
+			)
+		}
+		price, err := strconv.Atoi(line[2])
+		if err != nil {
+			return recs, fmt.Errorf(
+				"failed parsing price as int: %v\n",
+				line[0],
+			)
+		}
 		rec := record{
-			count: line[0],
+			count: count,
 			name:  line[1],
-			price: line[2],
+			price: price,
 		}
 		recs = append(recs, rec)
 	}
@@ -100,7 +110,13 @@ func loadRecords(path string) (records, error) {
 func storeRecords(path string, records records) error {
 	var lines [][]string
 	for _, r := range records {
-		line := []string{r.count, r.name, r.price}
+		count := strconv.Itoa(r.count)
+		price := strconv.Itoa(r.price)
+		line := []string{
+			count,
+			r.name,
+			price,
+		}
 		lines = append(lines, line)
 	}
 

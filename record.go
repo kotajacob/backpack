@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
@@ -21,35 +20,19 @@ func (e *declinedError) Error() string {
 
 // record represents a single entry in an inventory.
 type record struct {
-	count string
+	count int
 	name  string
-	price string
+	price int
 }
 
 // addCount adds to a record's count.
 // If the count would be made negative, a declinedError is returned.
-func (r *record) addCount(count string) error {
-	current, err := strconv.Atoi(r.count)
-	if err != nil {
-		return fmt.Errorf(
-			"failed parsing count of %v: %v\n",
-			r,
-			err,
-		)
-	}
-	addend, err := strconv.Atoi(count)
-	if err != nil {
-		return fmt.Errorf(
-			"failed parsing count %v: %v\n",
-			count,
-			err,
-		)
-	}
-	sum := current + addend
+func (r *record) addCount(count int) error {
+	sum := r.count + count
 	if sum < 0 {
 		return &declinedError{*r}
 	}
-	r.count = strconv.Itoa(sum)
+	r.count = sum
 	return nil
 }
 
@@ -58,14 +41,12 @@ func (r record) String() string {
 	var buf bytes.Buffer
 
 	// Ignoring error to use 0 as fallback count.
-	count, _ := strconv.Atoi(r.count)
 	plur := pluralize.NewClient()
-	buf.WriteString(strings.TrimSpace(plur.Pluralize(r.name, count, true)))
+	buf.WriteString(strings.TrimSpace(plur.Pluralize(r.name, r.count, true)))
 
-	price, err := strconv.Atoi(r.price)
-	if r.price != NULL_PRICE && err == nil {
+	if r.price != NULL_PRICE {
 		buf.WriteString(" for sale for $")
-		buf.WriteString(humanize.Comma(int64(price)))
+		buf.WriteString(humanize.Comma(int64(r.price)))
 	}
 
 	return buf.String()
@@ -101,27 +82,23 @@ func (rs records) String() string {
 	var names []string
 	var prices []string
 	for _, r := range rs {
-		count, _ := strconv.Atoi(r.count)
-		if count == 0 {
+		if r.count == 0 {
 			// Skip records with 0 count.
 			continue
 		}
-		r.count = humanize.Comma(int64(count))
-		counts = append(counts, r.count)
+		counts = append(counts, humanize.Comma(int64(r.count)))
 
 		plur := pluralize.NewClient()
 		names = append(
 			names,
-			strings.TrimSpace(plur.Pluralize(r.name, count, false)),
+			strings.TrimSpace(plur.Pluralize(r.name, r.count, false)),
 		)
 
-		price, err := strconv.Atoi(r.price)
-		if r.price != NULL_PRICE && err == nil {
-			r.price = "$" + humanize.Comma(int64(price))
+		if r.price > 0 {
+			prices = append(prices, "$"+humanize.Comma(int64(r.price)))
 		} else {
-			r.price = ""
+			prices = append(prices, "")
 		}
-		prices = append(prices, r.price)
 	}
 
 	// Add headings.

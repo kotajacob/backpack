@@ -11,41 +11,41 @@ func TestRecordString(t *testing.T) {
 	tests := []test{
 		{
 			r: record{
-				count: "1",
+				count: 1,
 				name:  "apple",
-				price: "5",
+				price: 5,
 			},
 			want: "1 apple for sale for $5",
 		},
 		{
 			r: record{
-				count: "0",
+				count: 0,
 				name:  "apple",
-				price: "5",
+				price: 5,
 			},
 			want: "0 apples for sale for $5",
 		},
 		{
 			r: record{
-				count: "10",
+				count: 10,
 				name:  "apple",
-				price: "5",
+				price: 5,
 			},
 			want: "10 apples for sale for $5",
 		},
 		{
 			r: record{
-				count: "1",
+				count: 1,
 				name:  "apple",
-				price: "-1",
+				price: -1,
 			},
 			want: "1 apple",
 		},
 		{
 			r: record{
-				count: "10",
+				count: 10,
 				name:  "apple",
-				price: "-1",
+				price: -1,
 			},
 			want: "10 apples",
 		},
@@ -68,19 +68,19 @@ func TestRecordsString(t *testing.T) {
 		{
 			rs: records{
 				{
-					count: "10",
+					count: 10,
 					name:  "Health Potion",
-					price: "10",
+					price: 10,
 				},
 				{
-					count: "10000",
+					count: 10000,
 					name:  "Mana Potion",
-					price: "8",
+					price: 8,
 				},
 				{
-					count: "1",
+					count: 1,
 					name:  "Death Potion",
-					price: "5000",
+					price: 5000,
 				},
 			},
 			want: "`" + `` + "`" + `` + "`" + `
@@ -96,15 +96,15 @@ func TestRecordsString(t *testing.T) {
 		{
 			rs: records{
 				{
-					count: "1",
+					count: 1,
 					name:  "Divine Bow",
 				},
 				{
-					count: "19",
+					count: 19,
 					name:  "Regular arrows",
 				},
 				{
-					count: "1",
+					count: 1,
 					name:  "Shield",
 				},
 			},
@@ -121,16 +121,16 @@ func TestRecordsString(t *testing.T) {
 		{
 			rs: records{
 				{
-					count: "10",
+					count: 10,
 					name:  "Health Potion",
 				},
 				{
-					count: "10000",
+					count: 10000,
 					name:  "Mana Potion",
-					price: "8",
+					price: 8,
 				},
 				{
-					count: "1",
+					count: 1,
 					name:  "Death Potion",
 				},
 			},
@@ -147,18 +147,18 @@ func TestRecordsString(t *testing.T) {
 		{
 			rs: records{
 				{
-					count: "0",
+					count: 0,
 					name:  "Health Potion",
 				},
 				{
-					count: "10000",
+					count: 10000,
 					name:  "Mana Potion",
-					price: "8",
+					price: 8,
 				},
 				{
-					count: "1",
+					count: 1,
 					name:  "Death Potion",
-					price: "-1",
+					price: -1,
 				},
 			},
 			want: "`" + `` + "`" + `` + "`" + `
@@ -173,9 +173,9 @@ func TestRecordsString(t *testing.T) {
 		{
 			rs: records{
 				{
-					count: "1",
+					count: 1,
 					name:  "apple",
-					price: "1",
+					price: 1,
 				},
 			},
 			want: "`" + `` + "`" + `` + "`" + `
@@ -189,9 +189,9 @@ func TestRecordsString(t *testing.T) {
 		{
 			rs: records{
 				{
-					count: "1",
+					count: 1,
 					name:  "apple",
-					price: "-1",
+					price: -1,
 				},
 			},
 			want: "`" + `` + "`" + `` + "`" + `

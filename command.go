@@ -14,7 +14,7 @@ import (
 	"github.com/gertd/go-pluralize"
 )
 
-const NULL_PRICE = "-1"
+const NULL_PRICE = -1
 const COIN = "coin"
 const FATAL_MSG = "Backpack update failed! Contact your local currator for help!"
 
@@ -195,12 +195,12 @@ func (b backpack) buyItem(request, buyer, seller string) string {
 	plur := pluralize.NewClient()
 	name := plur.Singular(strings.Join(values, " "))
 	itemFromSeller := record{
-		count: strconv.Itoa(-count), // Pass a negative count to seller.
+		count: -count, // Pass a negative count to seller.
 		name:  name,
 		price: NULL_PRICE,
 	}
 	itemToBuyer := record{
-		count: strconv.Itoa(count), // Pass a positive count to buyer.
+		count: count, // Pass a positive count to buyer.
 		name:  name,
 		price: NULL_PRICE,
 	}
@@ -254,17 +254,9 @@ func (b backpack) buyItem(request, buyer, seller string) string {
 	}
 
 	// Remove coins from buyer.
-	count, err = strconv.Atoi(itemToBuyer.count)
-	if err != nil {
-		return FATAL_MSG
-	}
-	price, err := strconv.Atoi(sellerOld.price)
-	if err != nil {
-		return FATAL_MSG
-	}
-	sum := count * price
+	sum := itemToBuyer.count * sellerOld.price
 	coinsFromBuyer := record{
-		count: strconv.Itoa(-sum), // Negative to subtract.
+		count: -sum, // Negative to subtract.
 		name:  COIN,
 		price: NULL_PRICE,
 	}
@@ -303,11 +295,15 @@ func (b backpack) buyItem(request, buyer, seller string) string {
 			"but failed to give %v to buyer", request, itemToBuyer)
 		return FATAL_MSG
 	}
+	absCoins := coinsFromBuyer.count
+	if absCoins < 0 {
+		absCoins = -absCoins
+	}
 	response.WriteString(fmt.Sprintf(
 		"%v bought %v for $%v\n",
 		buyer,
 		itemToBuyer,
-		strings.TrimPrefix(coinsFromBuyer.count, "-"),
+		absCoins,
 	))
 	response.WriteString(fmt.Sprintf(
 		"%v has %v\n",
@@ -339,7 +335,7 @@ func (b backpack) modifyItem(request, owner string, op operation) string {
 		// First argument is a number.
 		if len(values) == 1 {
 			// A single number means we're adding coins.
-			values = append(values, COIN, NULL_PRICE)
+			values = append(values, COIN, strconv.Itoa(NULL_PRICE))
 		}
 		values = values[1:]
 	} else {
@@ -358,13 +354,13 @@ func (b backpack) modifyItem(request, owner string, op operation) string {
 		absolute = true
 	}
 
-	// We now have count and removed it from values if present.
+	// We now have count and have removed it from values if present.
 	// Let's get the price.
 	price := NULL_PRICE
 	if len(values) != 1 {
 		p, err := strconv.Atoi(values[len(values)-1])
 		if err == nil {
-			price = strconv.Itoa(p)
+			price = p
 		}
 		values = values[:len(values)-1]
 	}
@@ -374,14 +370,18 @@ func (b backpack) modifyItem(request, owner string, op operation) string {
 	name := plur.Singular(strings.Join(values, " "))
 
 	rec := record{
-		count: strconv.Itoa(count),
+		count: count,
 		name:  name,
 		price: price,
 	}
 
 	var response bytes.Buffer
+	absCount := count
+	if absCount < 0 {
+		absCount = -absCount
+	}
 	absNoPriceRec := record{
-		count: strings.TrimPrefix(rec.count, "-"),
+		count: absCount,
 		name:  rec.name,
 	}
 	updated, old, err := updateRecord(rec, b.dir, owner, absolute)
