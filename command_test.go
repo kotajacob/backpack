@@ -153,11 +153,12 @@ func TestBuyItem(t *testing.T) {
 		}
 		reply := b.buyItem(tc.request, "buyer", "seller")
 		if tc.wantReply != reply {
-			t.Fatalf(
+			t.Logf(
 				"incorrect reply:\nwant:\n%v\ngot:\n%v\n",
 				tc.wantReply,
 				reply,
 			)
+			t.Fail()
 		}
 
 		buyerGot, err := os.ReadFile(buyerPath)
@@ -166,11 +167,12 @@ func TestBuyItem(t *testing.T) {
 		}
 
 		if strings.TrimSpace(string(buyerGot)) != tc.buyerWant {
-			t.Fatalf(
+			t.Logf(
 				"incorrect buyer inventory:\nwant:\n%v\ngot:\n%v\n",
 				tc.buyerWant,
 				string(buyerGot),
 			)
+			t.Fail()
 		}
 
 		sellerGot, err := os.ReadFile(sellerPath)
@@ -179,11 +181,12 @@ func TestBuyItem(t *testing.T) {
 		}
 
 		if strings.TrimSpace(string(sellerGot)) != tc.sellerWant {
-			t.Fatalf(
+			t.Logf(
 				"incorrect seller inventory:\nwant:\n%v\ngot:\n%v\n",
 				tc.sellerWant,
 				string(sellerGot),
 			)
+			t.Fail()
 		}
 	}
 }
@@ -203,6 +206,12 @@ func TestModifyItem(t *testing.T) {
 			request: "apples",
 			begin:   "",
 			want:    "1,apple,-1",
+		},
+		{
+			op:      opSet,
+			request: "key lime pie -1",
+			begin:   "1,key lime pie,10",
+			want:    "1,key lime pie,-1",
 		},
 		{
 			op:      opAdd,
@@ -295,7 +304,11 @@ func TestModifyItem(t *testing.T) {
 		got := strings.TrimSpace(string(data))
 
 		if tc.want != got {
-			t.Fatalf("want: %v got: %v\n", tc.want, got)
+			t.Fatalf(
+				"want: %v got: %v\n",
+				tc.want,
+				got,
+			)
 		}
 	}
 }

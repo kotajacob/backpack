@@ -10,6 +10,15 @@ import (
 	"github.com/gertd/go-pluralize"
 )
 
+// COIN is the canonical name for money.
+const COIN = "coin"
+
+// A price of NOT_FOR_SALE indicates that the item is not meant to be sold.
+const NOT_FOR_SALE = -1
+
+// A price of UNCHANGED indicates that the item's price should not be changed.
+const UNCHANGED = -2
+
 type declinedError struct {
 	r record
 }
@@ -44,7 +53,7 @@ func (r record) String() string {
 	plur := pluralize.NewClient()
 	buf.WriteString(strings.TrimSpace(plur.Pluralize(r.name, r.count, true)))
 
-	if r.price != NULL_PRICE {
+	if r.price != NOT_FOR_SALE && r.price != UNCHANGED {
 		buf.WriteString(" for sale for $")
 		buf.WriteString(humanize.Comma(int64(r.price)))
 	}
@@ -94,7 +103,7 @@ func (rs records) String() string {
 			strings.TrimSpace(plur.Pluralize(r.name, r.count, false)),
 		)
 
-		if r.price > 0 {
+		if r.price != NOT_FOR_SALE {
 			prices = append(prices, "$"+humanize.Comma(int64(r.price)))
 		} else {
 			prices = append(prices, "")
@@ -150,7 +159,7 @@ func (rs records) String() string {
 func (rs records) forSale() records {
 	var recs records
 	for _, r := range rs {
-		if r.price == NULL_PRICE {
+		if r.price == NOT_FOR_SALE {
 			continue
 		}
 		recs = append(recs, r)

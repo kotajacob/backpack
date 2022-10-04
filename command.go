@@ -14,8 +14,6 @@ import (
 	"github.com/gertd/go-pluralize"
 )
 
-const NULL_PRICE = -1
-const COIN = "coin"
 const FATAL_MSG = "Backpack update failed! Contact your local currator for help!"
 
 type backpack struct {
@@ -197,12 +195,12 @@ func (b backpack) buyItem(request, buyer, seller string) string {
 	itemFromSeller := record{
 		count: -count, // Pass a negative count to seller.
 		name:  name,
-		price: NULL_PRICE,
+		price: UNCHANGED,
 	}
 	itemToBuyer := record{
 		count: count, // Pass a positive count to buyer.
 		name:  name,
-		price: NULL_PRICE,
+		price: UNCHANGED,
 	}
 
 	var response bytes.Buffer
@@ -231,7 +229,7 @@ func (b backpack) buyItem(request, buyer, seller string) string {
 	}
 
 	// Ensure that the item is actually for sale!
-	if sellerOld.price == NULL_PRICE {
+	if sellerOld.price == NOT_FOR_SALE {
 		// Transaction declined. Item is not for sale!
 		response.WriteString(
 			fmt.Sprintf("%v does not have %v for sale\n", seller, itemToBuyer),
@@ -258,7 +256,7 @@ func (b backpack) buyItem(request, buyer, seller string) string {
 	coinsFromBuyer := record{
 		count: -sum, // Negative to subtract.
 		name:  COIN,
-		price: NULL_PRICE,
+		price: NOT_FOR_SALE,
 	}
 	_, buyerOld, err := updateRecord(coinsFromBuyer, b.dir, buyer, false)
 	if _, ok := err.(*declinedError); ok {
@@ -335,7 +333,7 @@ func (b backpack) modifyItem(request, owner string, op operation) string {
 		// First argument is a number.
 		if len(values) == 1 {
 			// A single number means we're adding coins.
-			values = append(values, COIN, strconv.Itoa(NULL_PRICE))
+			values = append(values, COIN, strconv.Itoa(NOT_FOR_SALE))
 		}
 		values = values[1:]
 	} else {
@@ -356,7 +354,7 @@ func (b backpack) modifyItem(request, owner string, op operation) string {
 
 	// We now have count and have removed it from values if present.
 	// Let's get the price.
-	price := NULL_PRICE
+	price := UNCHANGED
 	if len(values) != 1 {
 		p, err := strconv.Atoi(values[len(values)-1])
 		if err == nil {
@@ -383,6 +381,7 @@ func (b backpack) modifyItem(request, owner string, op operation) string {
 	absNoPriceRec := record{
 		count: absCount,
 		name:  rec.name,
+		price: UNCHANGED,
 	}
 	updated, old, err := updateRecord(rec, b.dir, owner, absolute)
 	if _, ok := err.(*declinedError); ok {

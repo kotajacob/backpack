@@ -98,24 +98,27 @@ func TestRecordsString(t *testing.T) {
 				{
 					count: 1,
 					name:  "Divine Bow",
+					price: 0,
 				},
 				{
 					count: 19,
 					name:  "Regular arrows",
+					price: 0,
 				},
 				{
 					count: 1,
 					name:  "Shield",
+					price: 0,
 				},
 			},
 			want: "`" + `` + "`" + `` + "`" + `
-╔══════════════════════════╗
-║ Quantity  Item           ║
-║──────────────────────────║
-║ 1         Divine Bow     ║
-║ 19        Regular arrows ║
-║ 1         Shield         ║
-╚══════════════════════════╝
+╔═════════════════════════════════╗
+║ Quantity  Item            Price ║
+║─────────────────────────────────║
+║ 1         Divine Bow      $0    ║
+║ 19        Regular arrows  $0    ║
+║ 1         Shield          $0    ║
+╚═════════════════════════════════╝
 ` + "`" + `` + "`" + `` + "`",
 		},
 		{
@@ -123,6 +126,7 @@ func TestRecordsString(t *testing.T) {
 				{
 					count: 10,
 					name:  "Health Potion",
+					price: -1,
 				},
 				{
 					count: 10000,
@@ -132,6 +136,7 @@ func TestRecordsString(t *testing.T) {
 				{
 					count: 1,
 					name:  "Death Potion",
+					price: -1,
 				},
 			},
 			want: "`" + `` + "`" + `` + "`" + `
