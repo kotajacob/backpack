@@ -258,6 +258,18 @@ func TestModifyItem(t *testing.T) {
 			begin:   "1,pear,-1",
 			want:    "1,pear,-1\n1,apple,-1",
 		},
+		{
+			op:      opSet,
+			request: "0 Mana Potions 10",
+			begin:   "10,Mana Potion,-1",
+			want:    "0,Mana Potion,10",
+		},
+		{
+			op:      opSet,
+			request: "0 Mana Potions",
+			begin:   "10,Mana Potion,-1",
+			want:    "0,Mana Potion,-1",
+		},
 	}
 
 	for _, tc := range tests {

@@ -361,8 +361,8 @@ func (b backpack) modifyItem(request, owner string, op operation) string {
 		p, err := strconv.Atoi(values[len(values)-1])
 		if err == nil {
 			price = p
+			values = values[:len(values)-1]
 		}
-		values = values[:len(values)-1]
 	}
 
 	// Make the name singular for storage.
