@@ -128,6 +128,16 @@ func (b backpack) commandHandler(s *discordgo.Session, m *discordgo.InteractionC
 		responses = append(responses, msg)
 	}
 
+	if opt, ok := optMap["buy"]; ok {
+		operated = true
+		msg := b.buyItem(
+			opt.StringValue(),
+			owner,
+			fmt.Sprintf("<#%v>", m.ChannelID),
+		)
+		responses = append(responses, msg)
+	}
+
 	// Print a table as fallback command if there was no operation given.
 	if !operated {
 		msg := b.displayInvetory(owner, false)
@@ -165,6 +175,16 @@ func (b backpack) displayInvetory(owner string, pricedOnly bool) string {
 func (b backpack) buyItem(request, buyer, seller string) string {
 	log.Println(buyer, "bought", request, "from", seller)
 	values := strings.Split(request, " ")
+
+	// Check if buyer and seller are the same person.
+	if buyer == seller {
+		return fmt.Sprintf(
+			"bruh. alright...\n%v bought %v from %v",
+			buyer,
+			request,
+			seller,
+		)
+	}
 
 	// Check if the request has a count.
 	count, err := strconv.Atoi(values[0])
