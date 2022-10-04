@@ -92,7 +92,6 @@ func (b backpack) commandHandler(s *discordgo.Session, m *discordgo.InteractionC
 	for _, opt := range opts {
 		optMap[opt.Name] = opt
 	}
-	fmt.Println(opts)
 
 	// Figure out the owner of the inventory.
 	var owner string
