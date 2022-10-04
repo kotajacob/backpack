@@ -309,7 +309,7 @@ func (b backpack) buyItem(request, buyer, seller string) string {
 		itemToBuyer,
 	))
 	response.WriteString(fmt.Sprintf(
-		"%v has %v left in stock",
+		"%v has %v",
 		seller,
 		sellerUpdated,
 	))

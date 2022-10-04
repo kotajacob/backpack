@@ -27,7 +27,7 @@ func TestBuyItem(t *testing.T) {
 			seller:  "20,apple,1",
 			wantReply: "buyer bought 10 apples for $10\n" +
 				"buyer has 10 apples\n" +
-				"seller has 10 apples for sale for $1 left in stock",
+				"seller has 10 apples for sale for $1",
 			buyerWant:  "40,coin,-1\n10,apple,-1",
 			sellerWant: "10,apple,1",
 		},
@@ -92,7 +92,7 @@ func TestBuyItem(t *testing.T) {
 			request:    "0 apples",
 			coins:      "50",
 			seller:     "20,apple,1",
-			wantReply:  "You can't buy 0 of an item silly!",
+			wantReply:  "You can't buy 0 of an item, silly!",
 			buyerWant:  "50,coin,-1",
 			sellerWant: "20,apple,1",
 		},
@@ -100,7 +100,7 @@ func TestBuyItem(t *testing.T) {
 			request: "-10 regular arrows",
 			coins:   "50",
 			seller:  "20,regular arrow,1",
-			wantReply: "You're requested to give away your items?\n" +
+			wantReply: "You've requested to give away your items?\n" +
 				"Try again with: \"10 regular arrows\"",
 			buyerWant:  "50,coin,-1",
 			sellerWant: "20,regular arrow,1",
