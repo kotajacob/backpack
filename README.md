@@ -15,7 +15,7 @@ There are four different operations: `buy`, `add`, `remove`, and `set` which
 take a string indicating an item with an optional count and price. If the count
 is given it comes first and if the price is given it comes last.
 
-# buy
+## buy
 If no count is given it will be 1. Buy does not accept a price option in the
 request. The `owner` option must always be used with `buy`. The owner is the
 buyer and the seller is the room from which the command is called. If the seller
@@ -45,7 +45,7 @@ in add.
 /inv remove[4 apple 10]
 ```
 
-# set
+## set
 Set is the simplest of the operations. It will just change the given inventory
 to match the given number and value of items.
 ```
