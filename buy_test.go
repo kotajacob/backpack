@@ -30,6 +30,16 @@ func TestBuyItem(t *testing.T) {
 			sellerWant: "10,apple,1\n10,coin,-1",
 		},
 		{
+			request: "10 apples",
+			coins:   "50",
+			seller:  "20,apple,1\n2,coin,-1",
+			wantReply: "buyer bought 10 apples for $10\n" +
+				"buyer has 10 apples\n" +
+				"seller has 10 apples for sale for $1",
+			buyerWant:  "40,coin,-1\n10,apple,-1",
+			sellerWant: "10,apple,1\n12,coin,-1",
+		},
+		{
 			request: "10 massive catapults",
 			coins:   "5000",
 			seller:  "11,massive catapult,150",
