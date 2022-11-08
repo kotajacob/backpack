@@ -26,6 +26,12 @@ func TestModifyItem(t *testing.T) {
 			want:    "1,apple,-1",
 		},
 		{
+			op:      opAdd,
+			request: "5  apples",
+			begin:   "",
+			want:    "5,apple,-1",
+		},
+		{
 			op:      opSet,
 			request: "key lime pie -1",
 			begin:   "1,key lime pie,10",

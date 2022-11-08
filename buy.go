@@ -56,7 +56,7 @@ func (b backpack) buyItem(request, buyer, seller string) string {
 
 	// Prepare the record requests.
 	plur := pluralize.NewClient()
-	name := plur.Singular(strings.Join(values, " "))
+	name := strings.Trim(plur.Singular(strings.Join(values, " ")), " ")
 	itemFromSeller := record{
 		count: -count, // Pass a negative count to seller.
 		name:  name,

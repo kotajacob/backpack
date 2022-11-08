@@ -60,7 +60,7 @@ func (b backpack) modifyItem(request, owner string, op operation) string {
 
 	// Make the name singular for storage.
 	plur := pluralize.NewClient()
-	name := plur.Singular(strings.Join(values, " "))
+	name := strings.Trim(plur.Singular(strings.Join(values, " ")), " ")
 
 	rec := record{
 		count: count,
