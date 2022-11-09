@@ -4,7 +4,7 @@ package main
 
 import (
 	"fmt"
-	"strings"
+	"strconv"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -15,63 +15,145 @@ type backpack struct {
 	dir string
 }
 
-type operation uint
-
-const (
-	opAdd operation = iota
-	opDel
-	opSet
-	opBuy
-)
-
-func (op operation) String() string {
-	switch op {
-	case opAdd:
-		return "Added"
-	case opDel:
-		return "Removed"
-	case opSet:
-		return "Set"
-	case opBuy:
-		return "Bought"
-	default:
-		return "unknown operation"
-	}
-}
-
 var invCommand = discordgo.ApplicationCommand{
 	Name:        "inv",
 	Description: "Manage Inventories",
 	Options: []*discordgo.ApplicationCommandOption{
 		{
-			Type:        discordgo.ApplicationCommandOptionString,
-			Name:        "owner",
-			Description: "Owner of the inventory",
+			Type:        discordgo.ApplicationCommandOptionSubCommand,
+			Name:        "view",
+			Description: "View an inventory",
 			Required:    false,
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "owner",
+					Description: "Whose inventory to view",
+					Required:    false,
+				},
+			},
 		},
 		{
-			Type:        discordgo.ApplicationCommandOptionString,
+			Type:        discordgo.ApplicationCommandOptionSubCommand,
 			Name:        "add",
-			Description: "Add an item to an inventory",
+			Description: "Add an item",
 			Required:    false,
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "owner",
+					Description: "Whose inventory to add to",
+					Required:    false,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "quantity",
+					Description: "The number of items to add",
+					Required:    false,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "item",
+					Description: "The name of the item to add",
+					Required:    false,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "price",
+					Description: "The price of the item to add",
+					Required:    false,
+				},
+			},
 		},
 		{
-			Type:        discordgo.ApplicationCommandOptionString,
+			Type:        discordgo.ApplicationCommandOptionSubCommand,
 			Name:        "remove",
-			Description: "Remove an item from an inventory",
+			Description: "Remove an item",
 			Required:    false,
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "owner",
+					Description: "Whose inventory to remove from",
+					Required:    false,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "quantity",
+					Description: "The number of items to remove",
+					Required:    false,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "item",
+					Description: "The name of the item to remove",
+					Required:    false,
+				},
+			},
 		},
 		{
-			Type:        discordgo.ApplicationCommandOptionString,
+			Type:        discordgo.ApplicationCommandOptionSubCommand,
 			Name:        "set",
-			Description: "Set the number of an item in an inventory",
+			Description: "Set the quantity or price of an item",
 			Required:    false,
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "owner",
+					Description: "Whose inventory to edit",
+					Required:    false,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "quantity",
+					Description: "The resultant number of items",
+					Required:    false,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "item",
+					Description: "The name of the item",
+					Required:    false,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "price",
+					Description: "The price of the item",
+					Required:    false,
+				},
+			},
 		},
 		{
-			Type:        discordgo.ApplicationCommandOptionString,
+			Type:        discordgo.ApplicationCommandOptionSubCommand,
 			Name:        "buy",
-			Description: "Owner buys an item from channel's invenory",
+			Description: "Buy an item",
 			Required:    false,
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "buyer",
+					Description: "Who's buying the item",
+					Required:    false,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "seller",
+					Description: "Who's selling the item",
+					Required:    false,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "quantity",
+					Description: "The number of items to buy",
+					Required:    false,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "item",
+					Description: "The name of the item to buy",
+					Required:    false,
+				},
+			},
 		},
 	},
 }
@@ -83,67 +165,98 @@ func (b backpack) commandHandler(s *discordgo.Session, m *discordgo.InteractionC
 		return
 	}
 
-	// Add the options to a map.
-	opts := m.ApplicationCommandData().Options
-	optMap := make(
-		map[string]*discordgo.ApplicationCommandInteractionDataOption,
-		len(opts),
-	)
-	for _, opt := range opts {
-		optMap[opt.Name] = opt
+	if len(m.ApplicationCommandData().Options) != 1 {
+		say("WTF ARE YOU DOING!?!?!", s, m)
+		return
+	}
+	subcommand := m.ApplicationCommandData().Options[0]
+
+	options := mapOptions(subcommand.Options)
+	defaultOwner := fmt.Sprintf("<#%v>", m.ChannelID)
+
+	if subcommand.Name == "view" {
+		say(b.displayInvetory(
+			getStringOrDefault(options, "owner", defaultOwner),
+			false,
+		), s, m)
+		return
 	}
 
-	// Figure out the owner of the inventory.
-	var owner string
-	if opt, ok := optMap["owner"]; ok {
-		owner = opt.StringValue()
-	} else {
-		// Surround string with <# > to highlight it as a channel on discord.
-		owner = fmt.Sprintf("<#%v>", m.ChannelID)
+	count, err := getIntOrDefault(options, "quantity", 1)
+	if err != nil {
+		say("Invalid quantity. Please use a whole number.", s, m)
+		return
+	}
+	if subcommand.Name == "buy" {
+		say(b.buyItem(
+			count,
+			getStringOrDefault(options, "item", ""),
+			getStringOrDefault(options, "buyer", defaultOwner),
+			getStringOrDefault(options, "seller", defaultOwner),
+		), s, m)
+		return
 	}
 
 	// Handle add, remove, and set.
-	var operated bool
-	var responses []string
-	if opt, ok := optMap["add"]; ok {
-		operated = true
-		msg := b.modifyItem(opt.StringValue(), owner, opAdd)
-		responses = append(responses, msg)
+	price, err := getIntOrDefault(options, "price", UNCHANGED)
+	if err != nil {
+		say("Invalid price. Please use a whole number.", s, m)
+		return
 	}
+	say(b.modifyItem(
+		count,
+		price,
+		getStringOrDefault(options, "item", COIN),
+		getStringOrDefault(options, "owner", defaultOwner),
+		subcommand.Name,
+	), s, m)
+}
 
-	if opt, ok := optMap["remove"]; ok {
-		operated = true
-		msg := b.modifyItem(opt.StringValue(), owner, opDel)
-		responses = append(responses, msg)
-	}
-
-	if opt, ok := optMap["set"]; ok {
-		operated = true
-		msg := b.modifyItem(opt.StringValue(), owner, opSet)
-		responses = append(responses, msg)
-	}
-
-	if opt, ok := optMap["buy"]; ok {
-		operated = true
-		msg := b.buyItem(
-			opt.StringValue(),
-			owner,
-			fmt.Sprintf("<#%v>", m.ChannelID),
-		)
-		responses = append(responses, msg)
-	}
-
-	// Print a table as fallback command if there was no operation given.
-	if !operated {
-		msg := b.displayInvetory(owner, false)
-		responses = append(responses, msg)
-	}
-
-	// Send our response.
+// say something in the chat.
+func say(msg string, s *discordgo.Session, m *discordgo.InteractionCreate) {
 	s.InteractionRespond(m.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
-			Content: strings.Join(responses, "\n"),
+			Content: msg,
 		},
 	})
+}
+
+// getStringOrDefault will return the option or a default string.
+func getStringOrDefault(
+	options map[string]*discordgo.ApplicationCommandInteractionDataOption,
+	key string,
+	defaultValue string,
+) string {
+	if opt, ok := options[key]; ok {
+		return opt.StringValue()
+	}
+	return defaultValue
+}
+
+// getIntOrDefault will return the option or a default int.
+func getIntOrDefault(
+	options map[string]*discordgo.ApplicationCommandInteractionDataOption,
+	key string,
+	defaultValue int,
+) (int, error) {
+	if opt, ok := options[key]; ok {
+		i, err := strconv.Atoi(opt.StringValue())
+		return i, err
+	}
+	return defaultValue, nil
+}
+
+// mapOptions takes a list of options and makes a map of them based on their name.
+func mapOptions(
+	options []*discordgo.ApplicationCommandInteractionDataOption,
+) map[string]*discordgo.ApplicationCommandInteractionDataOption {
+	optMap := make(
+		map[string]*discordgo.ApplicationCommandInteractionDataOption,
+		len(options),
+	)
+	for _, opt := range options {
+		optMap[opt.Name] = opt
+	}
+	return optMap
 }

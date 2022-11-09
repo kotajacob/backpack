@@ -9,9 +9,10 @@ import (
 
 func TestBuyItem(t *testing.T) {
 	type test struct {
-		request string
-		coins   string
-		seller  string
+		count  int
+		item   string
+		coins  string
+		seller string
 
 		wantReply  string
 		buyerWant  string
@@ -20,9 +21,10 @@ func TestBuyItem(t *testing.T) {
 
 	tests := []test{
 		{
-			request: "10 apples",
-			coins:   "50",
-			seller:  "20,apple,1",
+			count:  10,
+			item:   "apples",
+			coins:  "50",
+			seller: "20,apple,1",
 			wantReply: "buyer bought 10 apples for $10\n" +
 				"buyer has 10 apples\n" +
 				"seller has 10 apples for sale for $1",
@@ -30,9 +32,10 @@ func TestBuyItem(t *testing.T) {
 			sellerWant: "10,apple,1\n10,coin,-1",
 		},
 		{
-			request: "10  apples",
-			coins:   "50",
-			seller:  "20,apple,1",
+			count:  10,
+			item:   "apples",
+			coins:  "50",
+			seller: "20,apple,1",
 			wantReply: "buyer bought 10 apples for $10\n" +
 				"buyer has 10 apples\n" +
 				"seller has 10 apples for sale for $1",
@@ -40,9 +43,10 @@ func TestBuyItem(t *testing.T) {
 			sellerWant: "10,apple,1\n10,coin,-1",
 		},
 		{
-			request: "10 apples",
-			coins:   "50",
-			seller:  "20,apple,1\n2,coin,-1",
+			count:  10,
+			item:   "apples",
+			coins:  "50",
+			seller: "20,apple,1\n2,coin,-1",
 			wantReply: "buyer bought 10 apples for $10\n" +
 				"buyer has 10 apples\n" +
 				"seller has 10 apples for sale for $1",
@@ -50,9 +54,10 @@ func TestBuyItem(t *testing.T) {
 			sellerWant: "10,apple,1\n12,coin,-1",
 		},
 		{
-			request: "10 massive catapults",
-			coins:   "5000",
-			seller:  "11,massive catapult,150",
+			count:  10,
+			item:   "massive catapults",
+			coins:  "5000",
+			seller: "11,massive catapult,150",
 			wantReply: "buyer bought 10 massive catapults for $1500\n" +
 				"buyer has 10 massive catapults\n" +
 				"seller has 1 massive catapult for sale for $150",
@@ -60,9 +65,10 @@ func TestBuyItem(t *testing.T) {
 			sellerWant: "1,massive catapult,150\n1500,coin,-1",
 		},
 		{
-			request: "1 apple",
-			coins:   "50",
-			seller:  "",
+			count:  1,
+			item:   "apple",
+			coins:  "50",
+			seller: "",
 			wantReply: "seller does not have 1 apple in stock\n" +
 				"Please choose one of the following items:\n" +
 				"```\n" +
@@ -75,9 +81,10 @@ func TestBuyItem(t *testing.T) {
 			sellerWant: "",
 		},
 		{
-			request: "1 apple",
-			coins:   "50",
-			seller:  "1,apple,-1\n10,arrow,-1\n1,sword,100",
+			count:  1,
+			item:   "apple",
+			coins:  "50",
+			seller: "1,apple,-1\n10,arrow,-1\n1,sword,100",
 			wantReply: "seller does not have 1 apple for sale\n" +
 				"Please choose one of the following items:\n" +
 				"```\n" +
@@ -91,9 +98,10 @@ func TestBuyItem(t *testing.T) {
 			sellerWant: "1,apple,-1\n10,arrow,-1\n1,sword,100",
 		},
 		{
-			request: "10 apples",
-			coins:   "50",
-			seller:  "1,apple,1",
+			count:  10,
+			item:   "apples",
+			coins:  "50",
+			seller: "1,apple,1",
 			wantReply: "seller does not have 10 apples in stock\n" +
 				"Please choose one of the following items:\n" +
 				"```\n" +
@@ -107,9 +115,10 @@ func TestBuyItem(t *testing.T) {
 			sellerWant: "1,apple,1",
 		},
 		{
-			request: "10 apples",
-			coins:   "2",
-			seller:  "100,apple,1",
+			count:  10,
+			item:   "apples",
+			coins:  "2",
+			seller: "100,apple,1",
 			wantReply: "buyer has insufficient funds\n" +
 				"10 apples costs $10\n" +
 				"buyer only has 2 coins",
@@ -117,7 +126,8 @@ func TestBuyItem(t *testing.T) {
 			sellerWant: "100,apple,1",
 		},
 		{
-			request:    "0 apples",
+			count:      0,
+			item:       "apples",
 			coins:      "50",
 			seller:     "20,apple,1",
 			wantReply:  "You can't buy 0 of an item, silly!",
@@ -125,37 +135,32 @@ func TestBuyItem(t *testing.T) {
 			sellerWant: "20,apple,1",
 		},
 		{
-			request: "-10 regular arrows",
-			coins:   "50",
-			seller:  "20,regular arrow,1",
+			count:  -10,
+			item:   "regular arrows",
+			coins:  "50",
+			seller: "20,regular arrow,1",
 			wantReply: "You've requested to give away your items?\n" +
 				"Try again with: \"10 regular arrows\"",
 			buyerWant:  "50,coin,-1",
 			sellerWant: "20,regular arrow,1",
 		},
 		{
-			request:    "10",
+			count:      10,
+			item:       "coins",
 			coins:      "50",
-			seller:     "20,apple,1\n18,arrow,4\n1,sword,40",
-			wantReply:  "You can't buy coins. Make sure you request an item.",
+			seller:     "10,coins,1\n20,apple,1\n18,arrow,4\n1,sword,40",
+			wantReply:  "You can't buy coins silly!",
 			buyerWant:  "50,coin,-1",
-			sellerWant: "20,apple,1\n18,arrow,4\n1,sword,40",
+			sellerWant: "10,coins,1\n20,apple,1\n18,arrow,4\n1,sword,40",
 		},
 		{
-			request: "",
-			coins:   "50",
-			seller:  "20,apple,1\n18,arrow,4\n1,sword,40",
-			wantReply: "```\n" +
-				"╔═════════════════════════╗\n" +
-				"║ Quantity  Item    Price ║\n" +
-				"║─────────────────────────║\n" +
-				"║ 20        apples  $1    ║\n" +
-				"║ 18        arrows  $4    ║\n" +
-				"║ 1         sword   $40   ║\n" +
-				"╚═════════════════════════╝\n" +
-				"```",
+			count:      10,
+			item:       "",
+			coins:      "50",
+			seller:     "10,coins,1\n20,apple,1\n18,arrow,4\n1,sword,40",
+			wantReply:  "You forgot to request an item.",
 			buyerWant:  "50,coin,-1",
-			sellerWant: "20,apple,1\n18,arrow,4\n1,sword,40",
+			sellerWant: "10,coins,1\n20,apple,1\n18,arrow,4\n1,sword,40",
 		},
 	}
 
@@ -179,7 +184,7 @@ func TestBuyItem(t *testing.T) {
 		b := backpack{
 			dir: dir,
 		}
-		reply := b.buyItem(tc.request, "buyer", "seller")
+		reply := b.buyItem(tc.count, tc.item, "buyer", "seller")
 		if tc.wantReply != reply {
 			t.Logf(
 				"incorrect reply:\nwant:\n%v\ngot:\n%v\n",

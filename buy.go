@@ -16,47 +16,39 @@ import (
 // Unlike add, set, and remove, you do not specify a price in a buy request.
 // Additionally, you must always specify a name as the shorthand add/set/remove
 // coin functionality is not used in buy requests.
-func (b backpack) buyItem(request, buyer, seller string) string {
-	log.Println(buyer, "bought", request, "from", seller)
-	values := strings.Split(request, " ")
+func (b backpack) buyItem(count int, item, buyer, seller string) string {
+	log.Println(buyer, "bought", count, item, "from", seller)
 
 	// Check if buyer and seller are the same person.
 	if buyer == seller {
 		return fmt.Sprintf(
-			"bruh. alright...\n%v bought %v from %v",
+			"bruh. alright...\n%v bought %v %v from %v",
 			buyer,
-			request,
+			count, item,
 			seller,
 		)
 	}
 
-	// Check if the request has a count.
-	count, err := strconv.Atoi(values[0])
-	if err == nil {
-		// First argument is a number.
-		if len(values) == 1 {
-			// Normally, a number means we're using coins, but you cannot buy
-			// coins so reject the offer.
-			return "You can't buy coins. Make sure you request an item."
-		}
-		values = values[1:]
+	// Invalid items.
+	if item == "" {
+		return "You forgot to request an item."
+	}
+	if item == "coins" || item == "" {
+		return "You can't buy coins silly!"
 	}
 
 	// Request count should always be greater than 0!
 	if count == 0 {
-		if request == "" {
-			return b.displayInvetory(seller, true)
-		}
 		return "You can't buy 0 of an item, silly!"
 	} else if count < 0 {
-		fixed := strconv.Itoa(-count) + " " + strings.Join(values, " ")
+		fixed := strconv.Itoa(-count) + " " + item
 		return fmt.Sprintf("You've requested to give away your items?\n"+
 			"Try again with: \"%v\"", fixed)
 	}
 
 	// Prepare the record requests.
 	plur := pluralize.NewClient()
-	name := strings.Trim(plur.Singular(strings.Join(values, " ")), " ")
+	name := strings.Trim(plur.Singular(item), " ")
 	itemFromSeller := record{
 		count: -count, // Pass a negative count to seller.
 		name:  name,
@@ -158,18 +150,18 @@ func (b backpack) buyItem(request, buyer, seller string) string {
 	// Give coins to seller.
 	_, _, err = updateRecord(coinsToSeller, b.dir, seller, false)
 	if err != nil {
-		log.Printf("error in buy request %v: "+
+		log.Printf("error in buy request %v %v: "+
 			"item removed from seller, coins removed from buyer,"+
-			"but failed to give coins to seller", request)
+			"but failed to give coins to seller", count, item)
 		return FATAL_MSG
 	}
 
 	// Give item to buyer.
 	_, _, err = updateRecord(itemToBuyer, b.dir, buyer, false)
 	if err != nil {
-		log.Printf("error in buy request %v: "+
+		log.Printf("error in buy request %v %v: "+
 			"item removed from seller, coins removed from buyer,"+
-			"but failed to give %v to buyer", request, itemToBuyer)
+			"but failed to give %v to buyer", count, item, itemToBuyer)
 		return FATAL_MSG
 	}
 

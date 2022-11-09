@@ -11,8 +11,10 @@ import (
 
 func TestModifyItem(t *testing.T) {
 	type test struct {
-		op      operation
-		request string
+		op    string
+		count int
+		price int
+		item  string
 
 		begin string
 		want  string
@@ -20,88 +22,99 @@ func TestModifyItem(t *testing.T) {
 
 	tests := []test{
 		{
-			op:      opAdd,
-			request: "apples",
-			begin:   "",
-			want:    "1,apple,-1",
+			op:    "add",
+			count: 1,
+			item:  "apples",
+			price: -1,
+			begin: "",
+			want:  "1,apple,-1",
 		},
 		{
-			op:      opAdd,
-			request: "5  apples",
-			begin:   "",
-			want:    "5,apple,-1",
+			op:    "add",
+			count: 5,
+			item:  "apples",
+			price: -1,
+			begin: "",
+			want:  "5,apple,-1",
 		},
 		{
-			op:      opSet,
-			request: "key lime pie -1",
-			begin:   "1,key lime pie,10",
-			want:    "1,key lime pie,-1",
+			op:    "set",
+			count: 1,
+			item:  "key lime pie",
+			price: -1,
+			begin: "1,key lime pie,10",
+			want:  "1,key lime pie,-1",
 		},
 		{
-			op:      opAdd,
-			request: "apple",
-			begin:   "",
-			want:    "1,apple,-1",
+			op:    "add",
+			count: 1,
+			item:  "apple",
+			price: -1,
+			begin: "",
+			want:  "1,apple,-1",
 		},
 		{
-			op:      opAdd,
-			request: "100",
-			begin:   "",
-			want:    "100,coin,-1",
+			op:    "remove",
+			item:  "apples",
+			price: -1,
+			begin: "",
+			want:  "0,apple,-1",
 		},
 		{
-			op:      opAdd,
-			request: "10 apples",
-			begin:   "",
-			want:    "10,apple,-1",
+			op:    "remove",
+			count: 1,
+			item:  "apples",
+			price: -1,
+			begin: "10,apple,-1",
+			want:  "9,apple,-1",
 		},
 		{
-			op:      opDel,
-			request: "apples",
-			begin:   "",
-			want:    "0,apple,-1",
+			op:    "remove",
+			count: 8,
+			item:  "apples",
+			price: -1,
+			begin: "10,apple,-1",
+			want:  "2,apple,-1",
 		},
 		{
-			op:      opDel,
-			request: "1 apples",
-			begin:   "10,apple,-1",
-			want:    "9,apple,-1",
+			op:    "add",
+			count: 1,
+			item:  "apples",
+			price: -1,
+			begin: "1,apple,-1",
+			want:  "2,apple,-1",
 		},
 		{
-			op:      opDel,
-			request: "8 apples",
-			begin:   "10,apple,-1",
-			want:    "2,apple,-1",
+			op:    "add",
+			count: 10,
+			item:  "apples",
+			price: -1,
+			begin: "1,apple,-1",
+			want:  "11,apple,-1",
 		},
 		{
-			op:      opAdd,
-			request: "apples",
-			begin:   "1,apple,-1",
-			want:    "2,apple,-1",
+			op:    "add",
+			count: 1,
+			item:  "apples",
+			price: -1,
+			begin: "1,pear,-1",
+			want:  "1,pear,-1\n1,apple,-1",
 		},
 		{
-			op:      opAdd,
-			request: "10 apples",
-			begin:   "1,apple,-1",
-			want:    "11,apple,-1",
+			op:    "set",
+			count: 0,
+			price: 10,
+			item:  "Mana Potions",
+			begin: "10,Mana Potion,-1",
+			want:  "0,Mana Potion,10",
 		},
 		{
-			op:      opAdd,
-			request: "apples",
-			begin:   "1,pear,-1",
-			want:    "1,pear,-1\n1,apple,-1",
-		},
-		{
-			op:      opSet,
-			request: "0 Mana Potions 10",
-			begin:   "10,Mana Potion,-1",
-			want:    "0,Mana Potion,10",
-		},
-		{
-			op:      opSet,
-			request: "0 Mana Potions",
-			begin:   "10,Mana Potion,-1",
-			want:    "0,Mana Potion,-1",
+			op:    "set",
+			count: 0,
+			item:  "Mana Potions",
+			price: -1,
+			begin: "10,Mana Potion,-1",
+			want:  "0,Mana Potion,-1",
 		},
 	}
 
@@ -119,7 +132,7 @@ func TestModifyItem(t *testing.T) {
 		b := backpack{
 			dir: dir,
 		}
-		b.modifyItem(tc.request, "owner", tc.op)
+		b.modifyItem(tc.count, tc.price, tc.item, "owner", tc.op)
 
 		data, err := os.ReadFile(path)
 		if err != nil {
