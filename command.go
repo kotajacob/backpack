@@ -21,6 +21,26 @@ var invCommand = discordgo.ApplicationCommand{
 	Options: []*discordgo.ApplicationCommandOption{
 		{
 			Type:        discordgo.ApplicationCommandOptionSubCommand,
+			Name:        "describe",
+			Description: "View or set an item's description",
+			Required:    false,
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "item",
+					Description: "What item to describe",
+					Required:    true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "description",
+					Description: "Set the item's description",
+					Required:    false,
+				},
+			},
+		},
+		{
+			Type:        discordgo.ApplicationCommandOptionSubCommand,
 			Name:        "view",
 			Description: "View an inventory",
 			Required:    false,
@@ -173,6 +193,18 @@ func (b backpack) commandHandler(s *discordgo.Session, m *discordgo.InteractionC
 
 	options := mapOptions(subcommand.Options)
 	defaultOwner := fmt.Sprintf("<#%v>", m.ChannelID)
+
+	if subcommand.Name == "describe" {
+		item := getStringOrDefault(options, "item", "")
+		description := getStringOrDefault(options, "description", "")
+		if description == "" {
+			// Print the description.
+			say(b.description(item), s, m)
+		} else {
+			say(b.setDescription(item, description), s, m)
+		}
+		return
+	}
 
 	if subcommand.Name == "view" {
 		say(b.displayInvetory(
