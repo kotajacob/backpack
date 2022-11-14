@@ -9,7 +9,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-const FATAL_MSG = "Backpack update failed! Contact your local currator for help!"
+const FATAL_MSG = "Backpack failed! Contact your local currator for help!"
 
 type backpack struct {
 	dir string
