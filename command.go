@@ -9,7 +9,10 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-const FATAL_MSG = "Backpack failed! Contact your local currator for help!"
+// FatalMessage is just a generic help message to send to the user. It should
+// only be used if something critical fails which requires admin intervension
+// such as a file failing to be saved.
+const FatalMessage = "Backpack failed! Contact your local currator for help!"
 
 type backpack struct {
 	dir string

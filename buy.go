@@ -82,7 +82,7 @@ func (b backpack) buyItem(count int, item, buyer, seller string) string {
 	} else if err != nil {
 		// Fatal error.
 		log.Println(err)
-		return FATAL_MSG
+		return FatalMessage
 	}
 
 	// Ensure that the item is actually for sale!
@@ -103,7 +103,7 @@ func (b backpack) buyItem(count int, item, buyer, seller string) string {
 				itemToBuyer,
 				err,
 			)
-			return FATAL_MSG
+			return FatalMessage
 		}
 		return response.String()
 	}
@@ -138,13 +138,13 @@ func (b backpack) buyItem(count int, item, buyer, seller string) string {
 				itemToBuyer,
 				err,
 			)
-			return FATAL_MSG
+			return FatalMessage
 		}
 		return response.String()
 	} else if err != nil {
 		// Fatal error.
 		log.Println(err)
-		return FATAL_MSG
+		return FatalMessage
 	}
 
 	// Give coins to seller.
@@ -153,7 +153,7 @@ func (b backpack) buyItem(count int, item, buyer, seller string) string {
 		log.Printf("error in buy request %v %v: "+
 			"item removed from seller, coins removed from buyer,"+
 			"but failed to give coins to seller", count, item)
-		return FATAL_MSG
+		return FatalMessage
 	}
 
 	// Give item to buyer.
@@ -162,7 +162,7 @@ func (b backpack) buyItem(count int, item, buyer, seller string) string {
 		log.Printf("error in buy request %v %v: "+
 			"item removed from seller, coins removed from buyer,"+
 			"but failed to give %v to buyer", count, item, itemToBuyer)
-		return FATAL_MSG
+		return FatalMessage
 	}
 
 	response.WriteString(fmt.Sprintf(

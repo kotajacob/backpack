@@ -19,7 +19,7 @@ func (b backpack) description(item string) string {
 	descriptions, err := b.loadDescriptions()
 	if err != nil {
 		log.Printf("error loading descriptions: %v", err)
-		return FATAL_MSG
+		return FatalMessage
 	}
 	plur := pluralize.NewClient()
 	return descriptions[strings.Trim(plur.Singular(item), " ")]
@@ -30,7 +30,7 @@ func (b backpack) setDescription(item, description string) string {
 	descriptions, err := b.loadDescriptions()
 	if err != nil {
 		log.Printf("error loading descriptions: %v", err)
-		return FATAL_MSG
+		return FatalMessage
 	}
 
 	plur := pluralize.NewClient()
@@ -38,7 +38,7 @@ func (b backpack) setDescription(item, description string) string {
 	err = b.storeDescriptions(descriptions)
 	if err != nil {
 		log.Printf("error storing descriptions: %v", err)
-		return FATAL_MSG
+		return FatalMessage
 	}
 	return "Updated description of " + item + "."
 }

@@ -77,7 +77,7 @@ func (b backpack) modifyItem(count, price int, item, owner, op string) string {
 	} else {
 		// Fatal error.
 		log.Println(err)
-		return FATAL_MSG
+		return FatalMessage
 	}
 
 	// Add a little summary line.

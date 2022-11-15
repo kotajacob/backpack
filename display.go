@@ -11,7 +11,7 @@ func (b backpack) displayInvetory(owner string, pricedOnly bool) string {
 	recs, err := loadRecords(path)
 	if err != nil {
 		log.Printf("error displaying inventory %v: %v", owner, err)
-		return FATAL_MSG
+		return FatalMessage
 	}
 	if pricedOnly {
 		return recs.forSale().String()
