@@ -233,7 +233,7 @@ func (b backpack) commandHandler(s *discordgo.Session, m *discordgo.InteractionC
 	}
 
 	// Handle add, remove, and set.
-	price, err := getIntOrDefault(options, "price", UNCHANGED)
+	price, err := getIntOrDefault(options, "price", Unchanged)
 	if err != nil {
 		say("Invalid price. Please use a whole number.", s, m)
 		return
@@ -241,7 +241,7 @@ func (b backpack) commandHandler(s *discordgo.Session, m *discordgo.InteractionC
 	say(b.modifyItem(
 		count,
 		price,
-		getStringOrDefault(options, "item", COIN),
+		getStringOrDefault(options, "item", Coin),
 		getStringOrDefault(options, "owner", defaultOwner),
 		subcommand.Name,
 	), s, m)

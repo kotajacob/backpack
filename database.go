@@ -45,7 +45,7 @@ func updateRecord(v record, dir, owner string, absolute bool) (record, record, e
 		}
 
 		// Use the new price only if we were given a price.
-		if v.price != UNCHANGED {
+		if v.price != Unchanged {
 			recs[i].price = v.price
 		}
 		updated = recs[i]
@@ -55,8 +55,8 @@ func updateRecord(v record, dir, owner string, absolute bool) (record, record, e
 			return updated, old, &declinedError{v}
 		}
 
-		if v.price == UNCHANGED {
-			v.price = NOT_FOR_SALE
+		if v.price == Unchanged {
+			v.price = NotForSale
 		}
 
 		updated = v

@@ -52,12 +52,12 @@ func (b backpack) buyItem(count int, item, buyer, seller string) string {
 	itemFromSeller := record{
 		count: -count, // Pass a negative count to seller.
 		name:  name,
-		price: UNCHANGED,
+		price: Unchanged,
 	}
 	itemToBuyer := record{
 		count: count, // Pass a positive count to buyer.
 		name:  name,
-		price: UNCHANGED,
+		price: Unchanged,
 	}
 
 	var response bytes.Buffer
@@ -86,7 +86,7 @@ func (b backpack) buyItem(count int, item, buyer, seller string) string {
 	}
 
 	// Ensure that the item is actually for sale!
-	if sellerOld.price == NOT_FOR_SALE {
+	if sellerOld.price == NotForSale {
 		// Transaction declined. Item is not for sale!
 		response.WriteString(
 			fmt.Sprintf("%v does not have %v for sale\n", seller, itemToBuyer),
@@ -112,13 +112,13 @@ func (b backpack) buyItem(count int, item, buyer, seller string) string {
 	sum := itemToBuyer.count * sellerOld.price
 	coinsFromBuyer := record{
 		count: -sum, // Negative to subtract.
-		name:  COIN,
-		price: NOT_FOR_SALE,
+		name:  Coin,
+		price: NotForSale,
 	}
 	coinsToSeller := record{
 		count: sum,
-		name:  COIN,
-		price: NOT_FOR_SALE,
+		name:  Coin,
+		price: NotForSale,
 	}
 	_, buyerOld, err := updateRecord(coinsFromBuyer, b.dir, buyer, false)
 	if _, ok := err.(*declinedError); ok {

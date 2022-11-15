@@ -45,7 +45,7 @@ func (b backpack) modifyItem(count, price int, item, owner, op string) string {
 	absNoPriceRec := record{
 		count: absCount,
 		name:  rec.name,
-		price: UNCHANGED,
+		price: Unchanged,
 	}
 	updated, old, err := updateRecord(rec, b.dir, owner, absolute)
 	if _, ok := err.(*declinedError); ok {
