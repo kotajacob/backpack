@@ -73,7 +73,7 @@ func loadRecords(path string) (records, error) {
 
 	d, err := os.ReadFile(path)
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
-		return recs, fmt.Errorf("failed reading %v: %v\n", path, err)
+		return recs, fmt.Errorf("failed reading %v: %v", path, err)
 	}
 	r := csv.NewReader(bytes.NewReader(d))
 
@@ -83,19 +83,19 @@ func loadRecords(path string) (records, error) {
 			break
 		}
 		if err != nil {
-			return recs, fmt.Errorf("failed parsing %v: %v\n", path, err)
+			return recs, fmt.Errorf("failed parsing %v: %v", path, err)
 		}
 		count, err := strconv.Atoi(line[0])
 		if err != nil {
 			return recs, fmt.Errorf(
-				"failed parsing count as int: %v\n",
+				"failed parsing count as int: %v",
 				line[0],
 			)
 		}
 		price, err := strconv.Atoi(line[2])
 		if err != nil {
 			return recs, fmt.Errorf(
-				"failed parsing price as int: %v\n",
+				"failed parsing price as int: %v",
 				line[0],
 			)
 		}

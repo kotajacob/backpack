@@ -10,7 +10,7 @@ func (b backpack) displayInvetory(owner string, pricedOnly bool) string {
 	path := filepath.Join(b.dir, owner+".csv")
 	recs, err := loadRecords(path)
 	if err != nil {
-		log.Printf("error displaying inventory %v: %v", owner, err)
+		log.Printf("error displaying inventory %v: %v\n", owner, err)
 		return FatalMessage
 	}
 	if pricedOnly {

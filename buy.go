@@ -152,7 +152,7 @@ func (b backpack) buyItem(count int, item, buyer, seller string) string {
 	if err != nil {
 		log.Printf("error in buy request %v %v: "+
 			"item removed from seller, coins removed from buyer,"+
-			"but failed to give coins to seller", count, item)
+			"but failed to give coins to seller\n", count, item)
 		return FatalMessage
 	}
 
@@ -161,7 +161,7 @@ func (b backpack) buyItem(count int, item, buyer, seller string) string {
 	if err != nil {
 		log.Printf("error in buy request %v %v: "+
 			"item removed from seller, coins removed from buyer,"+
-			"but failed to give %v to buyer", count, item, itemToBuyer)
+			"but failed to give %v to buyer\n", count, item, itemToBuyer)
 		return FatalMessage
 	}
 
