@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 )
 
-// displayInvetory prints out a pretty table showing owner's inventory.
+// displayInvetory returns a pretty table showing owner's inventory.
 func (b backpack) displayInvetory(owner string, pricedOnly bool) string {
 	path := filepath.Join(b.dir, owner+".csv")
 	recs, err := loadRecords(path)
