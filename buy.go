@@ -5,9 +5,6 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	"strings"
-
-	"github.com/gertd/go-pluralize"
 )
 
 // buyItem removes an item from the seller, removes the corresponding number of
@@ -47,8 +44,7 @@ func (b backpack) buyItem(count int, item, buyer, seller string) string {
 	}
 
 	// Prepare the record requests.
-	plur := pluralize.NewClient()
-	name := strings.Trim(plur.Singular(item), " ")
+	name := normalizeName(item)
 	itemFromSeller := record{
 		count: -count, // Pass a negative count to seller.
 		name:  name,

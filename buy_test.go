@@ -25,9 +25,9 @@ func TestBuyItem(t *testing.T) {
 			item:   "apples",
 			coins:  "50",
 			seller: "20,apple,1",
-			wantReply: "buyer bought 10 apples for $10\n" +
-				"buyer has 10 apples\n" +
-				"seller has 10 apples for sale for $1",
+			wantReply: "buyer bought 10 Apples for $10\n" +
+				"buyer has 10 Apples\n" +
+				"seller has 10 Apples for sale for $1",
 			buyerWant:  "40,coin,-1\n10,apple,-1",
 			sellerWant: "10,apple,1\n10,coin,-1",
 		},
@@ -36,9 +36,9 @@ func TestBuyItem(t *testing.T) {
 			item:   "apples",
 			coins:  "50",
 			seller: "20,apple,1",
-			wantReply: "buyer bought 10 apples for $10\n" +
-				"buyer has 10 apples\n" +
-				"seller has 10 apples for sale for $1",
+			wantReply: "buyer bought 10 Apples for $10\n" +
+				"buyer has 10 Apples\n" +
+				"seller has 10 Apples for sale for $1",
 			buyerWant:  "40,coin,-1\n10,apple,-1",
 			sellerWant: "10,apple,1\n10,coin,-1",
 		},
@@ -47,9 +47,9 @@ func TestBuyItem(t *testing.T) {
 			item:   "apples",
 			coins:  "50",
 			seller: "20,apple,1\n2,coin,-1",
-			wantReply: "buyer bought 10 apples for $10\n" +
-				"buyer has 10 apples\n" +
-				"seller has 10 apples for sale for $1",
+			wantReply: "buyer bought 10 Apples for $10\n" +
+				"buyer has 10 Apples\n" +
+				"seller has 10 Apples for sale for $1",
 			buyerWant:  "40,coin,-1\n10,apple,-1",
 			sellerWant: "10,apple,1\n12,coin,-1",
 		},
@@ -58,9 +58,9 @@ func TestBuyItem(t *testing.T) {
 			item:   "massive catapults",
 			coins:  "5000",
 			seller: "11,massive catapult,150",
-			wantReply: "buyer bought 10 massive catapults for $1500\n" +
-				"buyer has 10 massive catapults\n" +
-				"seller has 1 massive catapult for sale for $150",
+			wantReply: "buyer bought 10 Massive catapults for $1500\n" +
+				"buyer has 10 Massive catapults\n" +
+				"seller has 1 Massive catapult for sale for $150",
 			buyerWant:  "3500,coin,-1\n10,massive catapult,-1",
 			sellerWant: "1,massive catapult,150\n1500,coin,-1",
 		},
@@ -69,7 +69,7 @@ func TestBuyItem(t *testing.T) {
 			item:   "apple",
 			coins:  "50",
 			seller: "",
-			wantReply: "seller does not have 1 apple in stock\n" +
+			wantReply: "seller does not have 1 Apple in stock\n" +
 				"Please choose one of the following items:\n" +
 				"```\n" +
 				"╔════════════════╗\n" +
@@ -85,13 +85,13 @@ func TestBuyItem(t *testing.T) {
 			item:   "apple",
 			coins:  "50",
 			seller: "1,apple,-1\n10,arrow,-1\n1,sword,100",
-			wantReply: "seller does not have 1 apple for sale\n" +
+			wantReply: "seller does not have 1 Apple for sale\n" +
 				"Please choose one of the following items:\n" +
 				"```\n" +
 				"╔════════════════════════╗\n" +
 				"║ Quantity  Item   Price ║\n" +
 				"║────────────────────────║\n" +
-				"║ 1         sword  $100  ║\n" +
+				"║ 1         Sword  $100  ║\n" +
 				"╚════════════════════════╝\n" +
 				"```",
 			buyerWant:  "50,coin,-1",
@@ -102,13 +102,13 @@ func TestBuyItem(t *testing.T) {
 			item:   "apples",
 			coins:  "50",
 			seller: "1,apple,1",
-			wantReply: "seller does not have 10 apples in stock\n" +
+			wantReply: "seller does not have 10 Apples in stock\n" +
 				"Please choose one of the following items:\n" +
 				"```\n" +
 				"╔════════════════════════╗\n" +
 				"║ Quantity  Item   Price ║\n" +
 				"║────────────────────────║\n" +
-				"║ 1         apple  $1    ║\n" +
+				"║ 1         Apple  $1    ║\n" +
 				"╚════════════════════════╝\n" +
 				"```",
 			buyerWant:  "50,coin,-1",
@@ -120,8 +120,8 @@ func TestBuyItem(t *testing.T) {
 			coins:  "2",
 			seller: "100,apple,1",
 			wantReply: "buyer has insufficient funds\n" +
-				"10 apples costs $10\n" +
-				"buyer only has 2 coins",
+				"10 Apples costs $10\n" +
+				"buyer only has 2 Coins",
 			buyerWant:  "2,coin,-1",
 			sellerWant: "100,apple,1",
 		},

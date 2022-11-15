@@ -10,8 +10,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/gertd/go-pluralize"
 )
 
 // description returns the description of an item.
@@ -21,8 +19,7 @@ func (b backpack) description(item string) string {
 		log.Printf("error loading descriptions: %v\n", err)
 		return FatalMessage
 	}
-	plur := pluralize.NewClient()
-	return descriptions[strings.Trim(plur.Singular(item), " ")]
+	return displayName(item, 1) + ": " + descriptions[normalizeName(item)]
 }
 
 // setDescription updates the description of an item.
@@ -33,8 +30,7 @@ func (b backpack) setDescription(item, description string) string {
 		return FatalMessage
 	}
 
-	plur := pluralize.NewClient()
-	descriptions[strings.Trim(plur.Singular(item), " ")] = description
+	descriptions[normalizeName(item)] = description
 	err = b.storeDescriptions(descriptions)
 	if err != nil {
 		log.Printf("error storing descriptions: %v\n", err)

@@ -15,7 +15,7 @@ func TestRecordString(t *testing.T) {
 				name:  "apple",
 				price: 5,
 			},
-			want: "1 apple for sale for $5",
+			want: "1 Apple for sale for $5",
 		},
 		{
 			r: record{
@@ -23,7 +23,7 @@ func TestRecordString(t *testing.T) {
 				name:  "apple",
 				price: 5,
 			},
-			want: "0 apples for sale for $5",
+			want: "0 Apples for sale for $5",
 		},
 		{
 			r: record{
@@ -31,7 +31,7 @@ func TestRecordString(t *testing.T) {
 				name:  "apple",
 				price: 5,
 			},
-			want: "10 apples for sale for $5",
+			want: "10 Apples for sale for $5",
 		},
 		{
 			r: record{
@@ -39,7 +39,7 @@ func TestRecordString(t *testing.T) {
 				name:  "apple",
 				price: -1,
 			},
-			want: "1 apple",
+			want: "1 Apple",
 		},
 		{
 			r: record{
@@ -47,7 +47,7 @@ func TestRecordString(t *testing.T) {
 				name:  "apple",
 				price: -1,
 			},
-			want: "10 apples",
+			want: "10 Apples",
 		},
 	}
 	for _, tc := range tests {
@@ -187,7 +187,7 @@ func TestRecordsString(t *testing.T) {
 ╔════════════════════════╗
 ║ Quantity  Item   Price ║
 ║────────────────────────║
-║ 1         apple  $1    ║
+║ 1         Apple  $1    ║
 ╚════════════════════════╝
 ` + "`" + `` + "`" + `` + "`",
 		},
@@ -203,7 +203,7 @@ func TestRecordsString(t *testing.T) {
 ╔═════════════════╗
 ║ Quantity  Item  ║
 ║─────────────────║
-║ 1         apple ║
+║ 1         Apple ║
 ╚═════════════════╝
 ` + "`" + `` + "`" + `` + "`",
 		},

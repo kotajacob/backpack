@@ -3,11 +3,11 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/dustin/go-humanize"
-	"github.com/gertd/go-pluralize"
 )
 
 // Coin is the canonical name for money.
@@ -50,8 +50,9 @@ func (r record) String() string {
 	var buf bytes.Buffer
 
 	// Ignoring error to use 0 as fallback count.
-	plur := pluralize.NewClient()
-	buf.WriteString(strings.TrimSpace(plur.Pluralize(r.name, r.count, true)))
+	buf.WriteString(strconv.Itoa(r.count))
+	buf.WriteString(" ")
+	buf.WriteString(displayName(r.name, r.count))
 
 	if r.price != NotForSale && r.price != Unchanged {
 		buf.WriteString(" for sale for $")
@@ -97,10 +98,9 @@ func (rs records) String() string {
 		}
 		counts = append(counts, humanize.Comma(int64(r.count)))
 
-		plur := pluralize.NewClient()
 		names = append(
 			names,
-			strings.TrimSpace(plur.Pluralize(r.name, r.count, false)),
+			strings.TrimSpace(displayName(r.name, r.count)),
 		)
 
 		if r.price != NotForSale {

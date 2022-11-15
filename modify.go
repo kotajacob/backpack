@@ -4,9 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"log"
-	"strings"
-
-	"github.com/gertd/go-pluralize"
 )
 
 // modifyItem updates an item for a given owner based on a request.
@@ -27,10 +24,7 @@ func (b backpack) modifyItem(count, price int, item, owner, op string) string {
 		absolute = true
 	}
 
-	// Make the name singular for storage.
-	plur := pluralize.NewClient()
-	name := strings.Trim(plur.Singular(item), " ")
-
+	name := normalizeName(item)
 	rec := record{
 		count: count,
 		name:  name,
